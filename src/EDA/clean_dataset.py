@@ -10,6 +10,7 @@ class cleanDataFrame:
         self.dataframe['Date'] = pd.to_datetime(self.dataframe['Date'],format="mixed")
         self.dataframe['Month'] = self.dataframe["Date"].dt.month_name()
         self.dataframe['Day'] = self.dataframe["Date"].dt.strftime("%A")
+        
 
     
     def make_weekend(self):
