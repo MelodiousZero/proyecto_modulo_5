@@ -32,8 +32,10 @@ matplotlib==3.10.0
 matplotlib-inline==0.2.2
 minify_html==0.18.1
 multimethod==1.12
+narwhals==2.22.1
 nest-asyncio==1.6.0
 networkx==3.6.1
+np==1.0.2
 numba==0.62.1
 numpy==2.3.5
 packaging==26.2
@@ -59,12 +61,14 @@ PyWavelets==1.9.0
 PyYAML==6.0.3
 pyzmq==27.1.0
 requests==2.34.2
+scikit-learn==1.9.0
 scipy==1.16.3
 seaborn==0.13.2
 setuptools==81.0.0
 six==1.17.0
 stack-data==0.6.3
 statsmodels==0.14.6
+threadpoolctl==3.6.0
 tornado==6.5.5
 tqdm==4.67.3
 traitlets==5.15.0
