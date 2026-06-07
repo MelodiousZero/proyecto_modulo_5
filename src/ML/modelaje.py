@@ -9,6 +9,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import PoissonRegressor
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.tree import DecisionTreeRegressor
@@ -21,6 +22,7 @@ import seaborn as sns
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 
 class compareModels:
@@ -98,6 +100,16 @@ class compareModels:
         gradient_boosting_regressor.fit(self.X_train,self.y_train)
         y_pred_train = gradient_boosting_regressor.predict(self.X_train)
         y_pred = gradient_boosting_regressor.predict(self.X_test)
+        return y_pred
+    
+    def poisson_GLM(self):
+        poisson_sklearn = make_pipeline(
+            StandardScaler(), 
+            PoissonRegressor(alpha=0.0, max_iter=1000) 
+        )
+
+        poisson_sklearn.fit(self.X_train, self.y_train)
+        y_pred = poisson_sklearn.predict(self.X_test)
         return y_pred
     
 
@@ -205,6 +217,7 @@ class compareModels:
                 "decision_tree":decision_tree_y_pred,"random_forest":random_forest_y_pred,"gradient_boost":gradient_boost_y_pred}
         
 
+   
 
         
     def most_important_features(self):
@@ -269,7 +282,6 @@ class compareModels:
         ax1.set_xlabel('Actual Values', fontsize=11)
         ax1.set_ylabel('Predicted Values', fontsize=11)
         ax1.set_title('Predicted vs Actual', fontsize=12, fontweight='bold')
-        # Add metrics text
         textstr = f'$R^2 = {r2:.3f}$\nMAE = {mae:.2f}\nRMSE = {rmse:.2f}'
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
         ax1.text(0.05, 0.95, textstr, transform=ax1.transAxes, fontsize=9,
@@ -290,7 +302,6 @@ class compareModels:
         ax3.set_title('Residual Distribution', fontsize=12, fontweight='bold')
         
         ax4 = axes[1, 1]
-        import scipy.stats as stats
         stats.probplot(residuals, dist="norm", plot=ax4)
         ax4.set_title('Q-Q Plot', fontsize=12, fontweight='bold')
         ax4.get_lines()[0].set_marker('o')

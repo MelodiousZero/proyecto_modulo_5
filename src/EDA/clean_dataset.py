@@ -1,7 +1,7 @@
 import pandas as pd
 import datetime as dt
 from ucimlrepo import fetch_ucirepo 
-
+import numpy as np
 
 
 class cleanDataFrame:
@@ -37,7 +37,14 @@ class cleanDataFrame:
         self.dataframe['Day'] = self.dataframe["Date"].dt.strftime("%A")
         self.dataframe.drop("Date",inplace=True,axis=1)
         
+    def make_sin_cos(self):
+        self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['hour_cos'] = np.cos(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['dow_sin'] = np.sin(2 * np.pi * self.dataframe['Day'] / 7)
+        self.dataframe['dow_cos'] = np.cos(2 * np.pi * self.dataframe['Day'] / 7)
 
+        self.dataframe['month_sin'] = np.sin(2 * np.pi * self.dataframe['Month'] / 12)
+        self.dataframe['month_cos'] = np.cos(2 * np.pi * self.dataframe['Month'] / 12)
     
     def make_weekend(self):
         self.dataframe['is_weekend'] = self.dataframe['Day'].apply(lambda x: True if x in ['Saturday','Sunday'] else False)
@@ -73,5 +80,6 @@ class cleanDataFrame:
         self.drop_unneccesary_columns()
         self.replace_holiday()
         self.encode()
+        self.make_sin_cos()
         output_df = self.dataframe
         return output_df
