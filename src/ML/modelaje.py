@@ -1,6 +1,9 @@
 from EDA.clean_dataset import cleanDataFrame
 import pandas as pd
 import numpy as np
+from sklearn.ensemble import AdaBoostRegressor
+from xgboost import XGBRegressor
+from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV 
 from sklearn.linear_model import LinearRegression
@@ -10,6 +13,7 @@ from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import ElasticNet
 from sklearn.linear_model import PoissonRegressor
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.tree import DecisionTreeRegressor
@@ -40,6 +44,7 @@ class compareModels:
         self.l1_ratios = np.linspace(0.1, 1.0, 6)
         self.grid_search_comparison_table = pd.DataFrame(columns=self.columns_table)
         self.seed = 97
+        self.scaler = StandardScaler()
 
     
     def linear_regression(self):
@@ -48,30 +53,42 @@ class compareModels:
         y_pred_train = regressor.predict(self.X_train)
 
         y_pred = regressor.predict(self.X_test)
-        return y_pred
+        return y_pred,regressor
          
 
     def lasso(self,alpha=0.01):
         lasso_regressor = Lasso(alpha=alpha)
-        lasso_regressor.fit(self.X_train,self.y_train)
-        y_pred_train = lasso_regressor.predict(self.X_train)
-        y_pred = lasso_regressor.predict(self.X_test)
-        return y_pred
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+
+        lasso_regressor.fit(X_train_scaled,self.y_train)
+
+        y_pred_train = lasso_regressor.predict(X_train_scaled)
+        y_pred = lasso_regressor.predict(X_test_scaled)
+        return y_pred,lasso_regressor
 
     def ridge(self,alpha=0.01):
         ridge_regressor = Ridge(alpha=alpha)
-        ridge_regressor.fit(self.X_train,self.y_train)
-        y_pred_train = ridge_regressor.predict(self.X_train)
-        y_pred = ridge_regressor.predict(self.X_test)
-        return y_pred
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+
+        ridge_regressor.fit(X_train_scaled,self.y_train)
+
+        y_pred_train = ridge_regressor.predict(X_train_scaled)
+        y_pred = ridge_regressor.predict(X_test_scaled)
+        return y_pred,ridge_regressor
 
     
     def elastic_net(self,alpha=0.001,l1_ratio=0.3):
         elastic_net_regressor = ElasticNet(alpha = alpha,l1_ratio = l1_ratio)
-        elastic_net_regressor.fit(self.X_train,self.y_train)
-        y_pred_train = elastic_net_regressor.predict(self.X_train)
-        y_pred = elastic_net_regressor.predict(self.X_test)
-        return y_pred
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+
+        elastic_net_regressor.fit(X_train_scaled,self.y_train)
+        
+        y_pred_train = elastic_net_regressor.predict(X_train_scaled)
+        y_pred = elastic_net_regressor.predict(X_test_scaled)
+        return y_pred,elastic_net_regressor
     
     def decision_tree(self,max_depth=9,min_samples_leaf=3,min_samples_split=15):
         decision_tree_regressor = DecisionTreeRegressor(max_depth=max_depth,
@@ -80,7 +97,7 @@ class compareModels:
         decision_tree_regressor.fit(self.X_train,self.y_train)
         y_pred_train = decision_tree_regressor.predict(self.X_train)
         y_pred = decision_tree_regressor.predict(self.X_test)
-        return y_pred
+        return y_pred,decision_tree_regressor
     
     def random_forest(self,max_depth=None,min_samples_split=3,n_estimators=150):
         random_forest_regressor = RandomForestRegressor(max_depth=max_depth,
@@ -89,7 +106,7 @@ class compareModels:
         random_forest_regressor.fit(self.X_train,self.y_train)
         y_pred_train = random_forest_regressor.predict(self.X_train)
         y_pred = random_forest_regressor.predict(self.X_test)
-        return y_pred
+        return y_pred,random_forest_regressor
 
     
   
@@ -100,33 +117,81 @@ class compareModels:
         gradient_boosting_regressor.fit(self.X_train,self.y_train)
         y_pred_train = gradient_boosting_regressor.predict(self.X_train)
         y_pred = gradient_boosting_regressor.predict(self.X_test)
-        return y_pred
+        return y_pred,gradient_boosting_regressor
     
     def poisson_GLM(self):
         poisson_sklearn = make_pipeline(
-            StandardScaler(), 
+            self.scaler, 
             PoissonRegressor(alpha=0.0, max_iter=1000) 
         )
 
         poisson_sklearn.fit(self.X_train, self.y_train)
         y_pred = poisson_sklearn.predict(self.X_test)
-        return y_pred
+        return y_pred,poisson_sklearn
+
+    def ada_boost(self, learning_rate=1.0, n_estimators=50, loss='linear'):
+        ada_boost_regressor = AdaBoostRegressor(
+            learning_rate=learning_rate,
+            n_estimators=n_estimators,
+            loss=loss,
+            random_state=self.seed
+        )
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+        ada_boost_regressor.fit(X_train_scaled, self.y_train)
+        y_pred = ada_boost_regressor.predict(X_test_scaled)
+        return y_pred,ada_boost_regressor
+
+    def xg_boost(self, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8):
+        xgboost_regressor = XGBRegressor(
+            learning_rate=learning_rate,
+            max_depth=max_depth,
+            n_estimators=n_estimators,
+            subsample=subsample,
+            random_state=self.seed,
+            verbosity=0  
+        )
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+        xgboost_regressor.fit(X_train_scaled, self.y_train)
+        y_pred = xgboost_regressor.predict(X_test_scaled)
+        return y_pred,xgboost_regressor
+
+    def mlp_regressor(self, hidden_layer_sizes=(100,), activation='relu', alpha=0.0001, learning_rate='constant'):
+        mlp = MLPRegressor(
+            hidden_layer_sizes=hidden_layer_sizes,
+            activation=activation,
+            alpha=alpha,
+            learning_rate=learning_rate,
+            max_iter=1000,
+            random_state=self.seed,
+            early_stopping=True,
+            validation_fraction=0.1
+        )
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+        X_test_scaled = self.scaler.transform(self.X_test)
+        mlp.fit(X_train_scaled, self.y_train)
+        y_pred = mlp.predict(X_test_scaled)
+        return y_pred,mlp
+        
+
     
 
     
     def grid_searching(self):
+        #Escalamiento variables.
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+
         #lasso
         lasso_param_grid = {"alpha":self.alphas}
         lasso = Lasso(max_iter=100000)
         lasso_grid = GridSearchCV(lasso,lasso_param_grid,cv=5,scoring="r2")
-        lasso_grid.fit(self.X_train, self.y_train)
-        best_lasso_alpha = lasso_grid.best_params_['alpha']
+        lasso_grid.fit(X_train_scaled, self.y_train)
         #ridge
         ridge_param_grid = {"alpha":self.alphas}
         ridge = Ridge(max_iter=100000)
         ridge_grid = GridSearchCV(ridge,ridge_param_grid,cv=5,scoring="r2")
-        ridge_grid.fit(self.X_train, self.y_train)
-        best_ridge_alpha = ridge_grid.best_params_['alpha']
+        ridge_grid.fit(X_train_scaled, self.y_train)
         #elastic net
         elastic_net_paragram_grid = {
             "alpha": self.alphas,
@@ -134,8 +199,7 @@ class compareModels:
         }
         elastic_net = ElasticNet(max_iter=100000)
         elastic_net_grid = GridSearchCV(elastic_net,elastic_net_paragram_grid,cv=5,scoring="r2")
-        elastic_net_grid.fit(self.X_train, self.y_train)
-        best_elastic_net_params = elastic_net_grid.best_params_
+        elastic_net_grid.fit(X_train_scaled, self.y_train)
         #decision tree
         decision_tree_param_grid = {
             'max_depth': [3, 5, 7, 9, 11, 15, None],
@@ -145,7 +209,6 @@ class compareModels:
         decision_tree = DecisionTreeRegressor(random_state=self.seed)
         decision_tree_grid = GridSearchCV(decision_tree,decision_tree_param_grid,cv=5,scoring="r2")
         decision_tree_grid.fit(self.X_train,self.y_train)
-        best_decision_tree_params = decision_tree_grid.best_params_
         #random forest
         random_forest_param_grid = {
             'n_estimators': [100, 200],
@@ -155,7 +218,6 @@ class compareModels:
         random_forest = RandomForestRegressor(random_state=self.seed)
         random_forest_grid = GridSearchCV(random_forest,random_forest_param_grid,cv=5,scoring="r2")
         random_forest_grid.fit(self.X_train,self.y_train)
-        best_random_forest_params = random_forest_grid.best_params_
         #gradient_boosting
         gradient_boosting_param_grid = {
             'learning_rate': [0.01, 0.05, 0.1, 0.2],
@@ -165,15 +227,49 @@ class compareModels:
         gradient_boosting = GradientBoostingRegressor(random_state=self.seed)
         gradient_boosting_grid = GridSearchCV(gradient_boosting,gradient_boosting_param_grid,cv=5,scoring="r2")
         gradient_boosting_grid.fit(self.X_train,self.y_train)
-        best_gradient_boosting_params=gradient_boosting_grid.best_params_
+
+        #AdaBoost
+        ada_param_grid = {
+            'n_estimators': [50, 100, 200],
+            'learning_rate': [0.5, 1.0, 2.0],
+            'loss': ['linear', 'square', 'exponential']
+        }
+        ada = AdaBoostRegressor(random_state=self.seed)
+        ada_grid = GridSearchCV(ada, ada_param_grid, cv=5, scoring='r2')
+        ada_grid.fit(X_train_scaled, self.y_train)
+
+        #XGBoost
+        xgb_param_grid = {
+            'n_estimators': [100, 200, 300],
+            'max_depth': [3, 5, 7],
+            'learning_rate': [0.01, 0.1, 0.2],
+            'subsample': [0.7, 0.8, 1.0]
+        }
+        xgb = XGBRegressor(random_state=self.seed, verbosity=0)
+        xgb_grid = GridSearchCV(xgb, xgb_param_grid, cv=5, scoring='r2')
+        xgb_grid.fit(X_train_scaled, self.y_train)
+
+        #MLP
+        mlp_param_grid = {
+            'hidden_layer_sizes': [(50,), (100,), (50, 25)],
+            'activation': ['relu', 'tanh'],
+            'alpha': [0.0001, 0.001, 0.01],
+            'learning_rate': ['constant', 'adaptive']
+        }
+        mlp = MLPRegressor(max_iter=1000, random_state=self.seed, early_stopping=True)
+        mlp_grid = GridSearchCV(mlp, mlp_param_grid, cv=5, scoring='r2')
+        mlp_grid.fit(X_train_scaled, self.y_train)
 
         best_params = {
-            "lasso":best_lasso_alpha,
-            "ridge": best_ridge_alpha,
-            "elastic_net": best_elastic_net_params,
-            "decision_tree":best_decision_tree_params,
-            "random_forest": best_random_forest_params,
-            "gradient_boost": best_gradient_boosting_params
+            "lasso":lasso_grid,
+            "ridge": ridge_grid,
+            "elastic_net": elastic_net_grid,
+            "decision_tree":decision_tree_grid,
+            "random_forest": random_forest_grid,
+            "gradient_boost": gradient_boosting_grid,
+            "ada_boost": ada_grid,           
+            "xg_boost": xgb_grid,            
+            "mlp": mlp_grid   
         }
 
         print(best_params)
@@ -182,39 +278,75 @@ class compareModels:
     
     def re_run_with_better_params(self):
         best_params = self.grid_searching()
-
-        lasso_y_pred = self.lasso(best_params["lasso"])
-
+        #Lasso
+        lasso_y_pred,lasso = self.lasso(best_params["lasso"].best_params_["alpha"])
         self.create_entry(lasso_y_pred,"Lasso (Grid Search)",self.grid_search_comparison_table)
-
-        ridge_y_pred = self.ridge(best_params["ridge"])
-
+        
+        #Ridge
+        ridge_y_pred,ridge = self.ridge(best_params["ridge"].best_params_["alpha"])
         self.create_entry(ridge_y_pred,"Ridge (Grid Search)",self.grid_search_comparison_table)
 
-
-        elastic_net_y_pred = self.elastic_net(best_params["elastic_net"]["alpha"],best_params["elastic_net"]["l1_ratio"])
-
+        #Elastic Net
+        elastic_net_y_pred,elastic_net = self.elastic_net(best_params["elastic_net"].best_params_["alpha"],best_params["elastic_net"].best_params_["l1_ratio"])
         self.create_entry(elastic_net_y_pred,"Elastic Net (Grid Search)",self.grid_search_comparison_table)
 
-        decision_tree_y_pred = self.decision_tree(best_params["decision_tree"]["max_depth"],
-                                                  best_params["decision_tree"]["min_samples_leaf"],
-                                                  best_params["decision_tree"]["min_samples_split"])
+        #Decision Tree
+        decision_tree_y_pred,decision_tree = self.decision_tree(best_params["decision_tree"].best_params_["max_depth"],
+                                                  best_params["decision_tree"].best_params_["min_samples_leaf"],
+                                                  best_params["decision_tree"].best_params_["min_samples_split"])
         
         self.create_entry(decision_tree_y_pred,"Decision Tree (Grid Search)",self.grid_search_comparison_table)
         
-        random_forest_y_pred = self.random_forest(best_params["random_forest"]["max_depth"],
-                                                  best_params["random_forest"]["min_samples_split"],
-                                                  best_params["random_forest"]["n_estimators"])
+        #Random Forest
+        random_forest_y_pred ,random_forest= self.random_forest(best_params["random_forest"].best_params_["max_depth"],
+                                                  best_params["random_forest"].best_params_["min_samples_split"],
+                                                  best_params["random_forest"].best_params_["n_estimators"])
         
         self.create_entry(random_forest_y_pred,"Random Forest (Grid Search)",self.grid_search_comparison_table)
         
-        gradient_boost_y_pred = self.gradient_boosting(best_params["gradient_boost"]["learning_rate"],
-                                                       best_params["gradient_boost"]["max_depth"],
-                                                       best_params["gradient_boost"]["n_estimators"])
+        #Gradient Boost
+        gradient_boost_y_pred,gradient_boost = self.gradient_boosting(best_params["gradient_boost"].best_params_["learning_rate"],
+                                                       best_params["gradient_boost"].best_params_["max_depth"],
+                                                       best_params["gradient_boost"].best_params_["n_estimators"])
         self.create_entry(gradient_boost_y_pred,"Gradient Boost (Grid Search)",self.grid_search_comparison_table)
 
-        return {"lasso": lasso_y_pred,"ridge":ridge_y_pred,"elastic_net":elastic_net_y_pred,
-                "decision_tree":decision_tree_y_pred,"random_forest":random_forest_y_pred,"gradient_boost":gradient_boost_y_pred}
+
+        #AdaBoost
+        ada_y_pred,ada_boost = self.ada_boost(
+            learning_rate=best_params["ada_boost"].best_params_["learning_rate"],
+            n_estimators=best_params["ada_boost"].best_params_["n_estimators"],
+            loss=best_params["ada_boost"].best_params_["loss"]
+        )
+        self.create_entry(ada_y_pred, "AdaBoost (Grid Search)", self.grid_search_comparison_table)
+
+        #XGBoost
+        xgb_y_pred,xg_boost = self.xg_boost(
+            learning_rate=best_params["xg_boost"].best_params_["learning_rate"],
+            max_depth=best_params["xg_boost"].best_params_["max_depth"],
+            n_estimators=best_params["xg_boost"].best_params_["n_estimators"],
+            subsample=best_params["xg_boost"].best_params_["subsample"]
+        )
+        self.create_entry(xgb_y_pred, "XGBoost (Grid Search)", self.grid_search_comparison_table)
+
+        #MLP
+        mlp_y_pred,mlp = self.mlp_regressor(
+            hidden_layer_sizes=best_params["mlp"].best_params_["hidden_layer_sizes"],
+            activation=best_params["mlp"].best_params_["activation"],
+            alpha=best_params["mlp"].best_params_["alpha"],
+            learning_rate=best_params["mlp"].best_params_["learning_rate"]
+        )
+        self.create_entry(mlp_y_pred, "MLP (Grid Search)", self.grid_search_comparison_table)
+
+        return {"lasso": lasso_y_pred,
+                "ridge":ridge_y_pred,
+                "elastic_net":elastic_net_y_pred,
+                "decision_tree":decision_tree_y_pred,
+                "random_forest":random_forest_y_pred,
+                "gradient_boost":gradient_boost_y_pred,
+                "ada_boost":ada_y_pred,
+                "xgboost":xgb_y_pred,
+                "mlp":mlp_y_pred
+            }, best_params
         
 
    
