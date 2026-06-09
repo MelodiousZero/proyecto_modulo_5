@@ -43,3 +43,32 @@ Pronóstico de Demanda Espaciotemporal para Bicicletas Compartidas
 - Idea Principal: Predecir la cantidad de bicicletas alquiladas por hora en función de variables meteorológicas e indicadores temporales.
 - Base de Datos: Seoul Bike Sharing Demand (UCI).
 - Modelos: Regresión. Como la variable objetivo es un conteo (enteros no negativos), los equipos deberán justificar el uso de un modelo de regresión de Poisson (GLM) y compararlo con modelos no paramétricos como Random Forest, prestando especial atención a la estacionalidad temporal.
+
+## Setup
+
+Este proyecto requiere **Python 3.13.9** (con esta version de python se ejecutó todo).  
+Todas las dependencias están en `requirements.txt`.
+
+### 1. Crea un ambiente virtual
+
+```bash
+python3.13 -m venv .nombre_de_tu_ambiente_virtual_aqui
+```
+
+
+### 2. Activa tu ambiente virtual
+
+| Plataforma  | Comando                     |
+|-----------|-----------------------------|
+| macOS / Linux | `source .venv/bin/activate`   |
+| Windows (cmd) | `.venv\Scripts\activate.bat` |
+| Windows (PowerShell) | `.venv\Scripts\Activate.ps1` |
+
+### 3. Instala las depedencias
+
+```bash
+pip install -r requirements.txt
+```
+
+Listo, procura usar este ambiente virtual para ejecutar los `.ipynb` o los `.py`.
+
