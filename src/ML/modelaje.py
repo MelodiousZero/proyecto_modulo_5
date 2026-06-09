@@ -33,9 +33,9 @@ class compareModels:
     def __init__(self):
 
         self.dataframe = cleanDataFrame().run_clean()
-        self.dependent_variable = cleanDataFrame().target
-        self.indepent_variables = list(set(self.dataframe.columns.tolist())-{"Rented Bike Count"})
-        self.y = np.sqrt(self.dataframe["Rented Bike Count"])
+        self.dependent_variable = "Rented Bike Count"
+        self.indepent_variables = list(set(self.dataframe.columns.tolist())-{self.dependent_variable})
+        self.y = np.sqrt(self.dataframe[self.dependent_variable])
         self.X = self.dataframe.drop("Rented Bike Count",axis=1)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size = 0.2, random_state = 0)
         self.columns_table = ['Model', 'MAE', 'MSE', 'RMSE', 'R2_score', 'Adjusted_R2']
@@ -110,10 +110,11 @@ class compareModels:
 
     
   
-    def gradient_boosting(self,learning_rate=0.1,max_depth=4,n_estimators=200):
+    def gradient_boosting(self,learning_rate=0.1,max_depth=4,n_estimators=200,loss="squared_error"):
         gradient_boosting_regressor = GradientBoostingRegressor(learning_rate=learning_rate,
                                                                 max_depth=max_depth,
-                                                                n_estimators=n_estimators)
+                                                                n_estimators=n_estimators,
+                                                                loss=loss)
         gradient_boosting_regressor.fit(self.X_train,self.y_train)
         y_pred_train = gradient_boosting_regressor.predict(self.X_train)
         y_pred = gradient_boosting_regressor.predict(self.X_test)
@@ -142,14 +143,15 @@ class compareModels:
         y_pred = ada_boost_regressor.predict(X_test_scaled)
         return y_pred,ada_boost_regressor
 
-    def xg_boost(self, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8):
+    def xg_boost(self, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8,objective="reg:squarederror"):
         xgboost_regressor = XGBRegressor(
             learning_rate=learning_rate,
             max_depth=max_depth,
             n_estimators=n_estimators,
             subsample=subsample,
             random_state=self.seed,
-            verbosity=0  
+            verbosity=0,
+            objective = objective 
         )
         X_train_scaled = self.scaler.fit_transform(self.X_train)
         X_test_scaled = self.scaler.transform(self.X_test)
@@ -178,18 +180,18 @@ class compareModels:
     
 
     
-    def grid_searching(self):
+    def grid_searching(self,scoring="r2"):
         #Escalamiento variables.
         X_train_scaled = self.scaler.fit_transform(self.X_train)
 
         #lasso
         lasso_param_grid = {"alpha":self.alphas}
-        lasso = Lasso(max_iter=100000)
+        lasso = Lasso(max_iter=10000)
         lasso_grid = GridSearchCV(lasso,lasso_param_grid,cv=5,scoring="r2")
         lasso_grid.fit(X_train_scaled, self.y_train)
         #ridge
         ridge_param_grid = {"alpha":self.alphas}
-        ridge = Ridge(max_iter=100000)
+        ridge = Ridge(max_iter=10000)
         ridge_grid = GridSearchCV(ridge,ridge_param_grid,cv=5,scoring="r2")
         ridge_grid.fit(X_train_scaled, self.y_train)
         #elastic net
@@ -197,7 +199,7 @@ class compareModels:
             "alpha": self.alphas,
             "l1_ratio": self.l1_ratios
         }
-        elastic_net = ElasticNet(max_iter=100000)
+        elastic_net = ElasticNet(max_iter=10000)
         elastic_net_grid = GridSearchCV(elastic_net,elastic_net_paragram_grid,cv=5,scoring="r2")
         elastic_net_grid.fit(X_train_scaled, self.y_train)
         #decision tree
@@ -395,6 +397,7 @@ class compareModels:
               'R2_score':round(R2,4),
               'Adjusted_R2':round(adj_r2,4)}
         datafame.loc[len(datafame)] = test_dict
+        return datafame
     
 
 
@@ -447,4 +450,20 @@ class compareModels:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
-            
+    
+    def plot_coefficients(self, model, model_name):
+        if hasattr(model, 'coef_'):
+            coefs = model.coef_
+        elif hasattr(model, 'named_steps'):  # pipeline
+            coefs = model.named_steps['poissonregressor'].coef_
+        else:
+            print("No coefficients found")
+            return
+        features = self.X.columns
+        plt.figure(figsize=(10,5))
+        plt.bar(features, coefs)
+        plt.xticks(rotation=90)
+        plt.title(f'Coeficientes – {model_name}')
+        plt.tight_layout()
+        plt.show()
+
