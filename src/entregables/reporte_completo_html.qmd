@@ -766,22 +766,39 @@ De esta manera reduje la influencia de los picos extremos de demanda, los cuales
 Lo quise hacer de esta manera para suavizar dichos picos de demanda y no considerarlos outliers puesto que dan mucha información acerca de patrones de uso.
 
 
-## Interpretación de resultados y conclusión
-
-Al final la tabla quedó así:
-
-```{python}
-comparacion.grid_search_comparison_table.sort_values(by='R2_score', ascending=False)
-```
-
-Por lo que la conclusión sería:
+## Conclusión
 
 Existe una diferencia muy marcada entre las dos familias de modelos evaluados:
 
 + Modelos Lineales Regularizados (Lasso, Ridge, Elastic Net) + Poisson
 + Modelos de Ensamble basados en árboles + MLP
 
-Poisson ofreció una mejora significativa con respecto de Lasso, Ridge y Elastic Net, probablemente porque dado los supuestos es el modelo adecuado (lo vimos en la justificación) pero aún así está muy lejos del segundo grupo mencionado en la lista de arriba. 
+Poisson ofreció una mejora significativa con respecto de Lasso, Ridge y Elastic Net, probablemente porque dado los supuestos es el modelo adecuado si nos limitaramos a Modelos Lineales Regularizados (es una variable de conteo, etc) pero aún así está muy lejos del segundo grupo mencionado en la lista de arriba en términos de _perfomance_. 
 
-La demanda debe de ser no-lineal debido a la relación entre las variables, por lo que los modelos del segundo grupo mencionado son mejores, estos captan las complejas interacciones y la fuerte estacionalidad horaria.
+La demanda de bicicletas tiene que ser no-lineal debido a la relación entre distintas variables como lo puede ser la humedad, la visibilidad, etc, por lo que los modelos del segundo grupo mencionado son mejores, estos captan las complejas interacciones y la fuerte estacionalidad horaria. 
 
+Además, usar `MSE` y hacer la modificación de raíz cuadrada a nuestra variable dependiente resultó ser un acierto:
+
+```{python}
+#| eval: false
+
+self.y = np.sqrt(self.dataframe[self.dependent_variable])
+```
+
+
+Dado que logramos suavizar los picos de demanda horaria sin removerlos o considerarlos como _outliers_. 
+También, incluir columnas de estacionalidad temporal como lo son los senos y cosenos usando las horas y días fue un acierto también
+
+```{python}
+def make_sin_cos(self):
+        self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['hour_cos'] = np.cos(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['dow_sin'] = np.sin(2 * np.pi * self.dataframe['Day'] / 7)
+        self.dataframe['dow_cos'] = np.cos(2 * np.pi * self.dataframe['Day'] / 7)
+
+        self.dataframe['month_sin'] = np.sin(2 * np.pi * self.dataframe['Month'] / 12)
+        self.dataframe['month_cos'] = np.cos(2 * np.pi * self.dataframe['Month'] / 12)
+    
+```
+
+Dado que con esto prestamos atención a la estacionalidad temporal, contextualizamos así las variables de hora, día y mes.
