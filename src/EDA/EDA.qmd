@@ -1,0 +1,196 @@
+---
+title: Importando el dataset.
+jupyter: python3
+---
+
+
+Vamos a importar el dataset de 'Seoul Bike Sharing Demand' del repositorio de Machine Learning de UC Irvine, que [podemos encontrar aquí](https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand) siguiendo la documentación de importación que en dicha URL se encuentra.
+
+
+```{python}
+from ucimlrepo import fetch_ucirepo 
+import pandas as pd 
+# fetch dataset 
+seoul_bike_sharing_demand = fetch_ucirepo(id=560) 
+  
+# data (as pandas dataframes) 
+X = seoul_bike_sharing_demand.data.features 
+y = seoul_bike_sharing_demand.data.targets 
+  
+# metadata 
+print(seoul_bike_sharing_demand.metadata) 
+  
+# variable information 
+print(seoul_bike_sharing_demand.variables) 
+
+
+seoul_bike_sharing_demand_df = pd.concat([seoul_bike_sharing_demand.data.features, seoul_bike_sharing_demand.data.targets], axis=1)
+```
+
+Vamos a limpiar el dataset usando limpieza_de_dataset.py
+
+```{python}
+from clean_dataset import cleanDataFrame
+
+
+clean_df = cleanDataFrame()
+
+clean_df.make_date()
+clean_df.make_weekend()
+
+seoul_bike_sharing_demand_df = clean_df.dataframe
+```
+
+Ahora haremos un EDA inicial con 'Profile Report'.
+
+```{python}
+import pandas as pd
+from ydata_profiling import ProfileReport
+
+profile = ProfileReport(seoul_bike_sharing_demand_df, title="Seoul Bike EDA Report")
+profile.to_notebook_iframe()
+# profile.to_file("seoul_bike_eda_report.html")
+```
+
+Además del EDA inicial queremos ilustrar las siguientes observaciones:
+
+```{python}
+%matplotlib inline
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+sns.set_style("whitegrid")
+palette = ["#CD2E3A", "#0047A0", "#000000", "#FFFFFF"]   # usé los colores de la bandera de Corea del Sur
+
+categorical_columns = ["Seasons", "Holiday", "is_weekend", "Month", "Day"]
+
+day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+month_order = ['January', 'February', 'March', 'April', 'May', 'June',
+               'July', 'August', 'September', 'October', 'November', 'December']
+
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+axes = axes.flatten()
+
+season_names = {0: 'Spring', 1: 'Summer', 2: 'Autumn', 3: 'Winter'}
+season_order = ['Spring', 'Summer', 'Autumn', 'Winter']
+
+day_map = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2,
+            'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+
+month_map = {'January': 0, 'February': 1, 'March': 2, 'April': 3,
+            'May': 4, 'June': 5, 'July': 6, 'August': 7,
+            'September': 8, 'October': 9, 'November': 10, 'December': 11}
+
+for i, col in enumerate(categorical_columns):
+    if col == 'Day':
+        order = day_order
+        x_data = seoul_bike_sharing_demand_df[col].map(day_map)
+    elif col == 'Month':
+        order = month_order
+        x_data = seoul_bike_sharing_demand_df[col].map(month_map)
+
+    elif col == 'Seasons':
+        order = season_order
+        x_data = seoul_bike_sharing_demand_df[col].map(season_names)
+    else:
+        order = None   
+
+    sns.barplot(data=seoul_bike_sharing_demand_df,
+                x=col, y='Rented Bike Count',
+                hue=col, palette=palette, legend=False,
+                order=order,                    
+                edgecolor='black', linewidth=0.8,
+                ax=axes[i])
+    axes[i].set_title(f'{col}', fontsize=14, fontweight='bold')
+    axes[i].set_xlabel(col, fontsize=12)
+    axes[i].set_ylabel('Rented Bike Count', fontsize=12)
+    axes[i].tick_params(axis='x', rotation=45, labelsize=10)
+
+fig.delaxes(axes[5])
+plt.tight_layout()
+plt.show()
+```
+
+Con base en lo anterior, las observaciones son:
+- La renta de bicicletas aumenta en primavera y verano (debido a que son condiciones más agradables para rodar)
+- Se rentan más bicicletas en días que no son festivos (la gente las usa para ir a trabajar, probablemente)
+- Se rentan más o menos en una misma cantidad entre fin de semana o entre semana.
+- La gráfica de los meses nos muestra la tendencia de las temporadas. 
+- El día con menos rentas es domingo (probablemente porque la gente descansa ese día)
+
+```{python}
+plt.figure(figsize=(20,10))
+sns.pointplot(x=seoul_bike_sharing_demand_df['Hour'],
+              y=seoul_bike_sharing_demand_df['Rented Bike Count'],
+              hue=seoul_bike_sharing_demand_df['Holiday'],
+              palette={"Holiday": "#CD2E3A", "No Holiday": "#0047A0"})
+plt.title("Patrón de rentas de bicicletas basado en hora discriminando por día festivo.")
+
+# Add vertical lines at hour 8 and hour 18
+plt.axvline(x=8, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+plt.axvline(x=18, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+
+plt.show()
+```
+
+Observaciones de la gráfica de arriba serían:
+- En días no festivos los picos se encuentran en las horas de entrada y salida de las oficinas.
+- En días festivos no hay tales picos es una gráfica más suave que va disminuyendo conforme acaba el día.
+Esta gráfica muestra una clara tendencia de uso para transportarse hacia desde los espacios de trabajo.
+
+```{python}
+plt.figure(figsize=(20,10))
+
+# South Korean flag colors (4 colors for 4 seasons)
+# Order: red, blue, black, white – you can assign them to seasons as you prefer
+seasons_palette = ["#CD2E3A", "#0047A0", "#000000", "#B09709B4"]
+
+sns.pointplot(x=seoul_bike_sharing_demand_df['Hour'],
+              y=seoul_bike_sharing_demand_df['Rented Bike Count'],
+              hue=seoul_bike_sharing_demand_df['Seasons'],
+              palette=seasons_palette)
+
+plt.title("Patrón de rentas por hora tomando en cuenta temporadas")
+plt.axvline(x=8, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+plt.axvline(x=18, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+plt.show()
+```
+
+Observaciones:
+- Los picos permacen pero en invierno la gente renta menos bicicletas (debido a que son condiciones más adversas para rodar)
+- En verano y otoño se rentan más.
+
+```{python}
+seoul_bike_sharing_demand_df["Dew point temperature"]
+```
+
+```{python}
+seoul_bike_sharing_demand_df["Temperature"]
+```
+
+Las dos columnas de arriba están muy correlacionadas entre sí y no aportan información muy distinta. Las dos son de temperatura. Eliminaré la primera, 'Dew Point Temperature'
+
+```{python}
+set(seoul_bike_sharing_demand_df["Holiday"].to_list())
+```
+
+Cambiaré la columna de arriba a 0s y 1s para trabajarlos de manera más sencilla:
+
+```{python}
+seoul_bike_sharing_demand_df['Holiday_1'] = seoul_bike_sharing_demand_df['Holiday'].apply(lambda x: 1 if x=="Holiday" else 0 )
+set(seoul_bike_sharing_demand_df["Holiday_1"].to_list()
+)
+```
+
+Todas estas modificaciones de arriba más la descarga del dataset las reunimos en la siguiente función para poder ser llamada en otros archivos.
+
+```{python}
+cleaning_df = cleanDataFrame()
+seoul_bike_sharing_demand_df = cleaning_df.run_clean()
+```
+
+```{python}
+seoul_bike_sharing_demand_df.columns
+```
+

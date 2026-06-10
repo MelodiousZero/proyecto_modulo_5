@@ -278,64 +278,73 @@ class compareModels:
 
         return best_params
     
-    def re_run_with_better_params(self):
-        best_params = self.grid_searching()
+    def re_run_with_better_params(self,best_params=None):
+        if not best_params:
+            og_params = self.grid_searching()
+            best_params = {
+            name: gs
+            for name, gs in og_params.items()
+        }
+        else:
+            og_params = best_params    
+
+            
         #Lasso
-        lasso_y_pred,lasso = self.lasso(best_params["lasso"].best_params_["alpha"])
+        lasso_y_pred,lasso = self.lasso(best_params["lasso"]["alpha"])
         self.create_entry(lasso_y_pred,"Lasso (Grid Search)",self.grid_search_comparison_table)
         
         #Ridge
-        ridge_y_pred,ridge = self.ridge(best_params["ridge"].best_params_["alpha"])
+        ridge_y_pred,ridge = self.ridge(best_params["ridge"]["alpha"])
         self.create_entry(ridge_y_pred,"Ridge (Grid Search)",self.grid_search_comparison_table)
 
         #Elastic Net
-        elastic_net_y_pred,elastic_net = self.elastic_net(best_params["elastic_net"].best_params_["alpha"],best_params["elastic_net"].best_params_["l1_ratio"])
+        elastic_net_y_pred,elastic_net = self.elastic_net(best_params["elastic_net"]["alpha"],best_params["elastic_net"]["l1_ratio"])
         self.create_entry(elastic_net_y_pred,"Elastic Net (Grid Search)",self.grid_search_comparison_table)
 
         #Decision Tree
-        decision_tree_y_pred,decision_tree = self.decision_tree(best_params["decision_tree"].best_params_["max_depth"],
-                                                  best_params["decision_tree"].best_params_["min_samples_leaf"],
-                                                  best_params["decision_tree"].best_params_["min_samples_split"])
+        decision_tree_y_pred,decision_tree = self.decision_tree(best_params["decision_tree"]["max_depth"],
+                                                  best_params["decision_tree"]["min_samples_leaf"],
+                                                  best_params["decision_tree"]["min_samples_split"])
         
         self.create_entry(decision_tree_y_pred,"Decision Tree (Grid Search)",self.grid_search_comparison_table)
         
         #Random Forest
-        random_forest_y_pred ,random_forest= self.random_forest(best_params["random_forest"].best_params_["max_depth"],
-                                                  best_params["random_forest"].best_params_["min_samples_split"],
-                                                  best_params["random_forest"].best_params_["n_estimators"])
+        random_forest_y_pred ,random_forest= self.random_forest(best_params["random_forest"]["max_depth"],
+                                                  best_params["random_forest"]["min_samples_split"],
+                                                  best_params["random_forest"]["n_estimators"])
         
         self.create_entry(random_forest_y_pred,"Random Forest (Grid Search)",self.grid_search_comparison_table)
         
         #Gradient Boost
-        gradient_boost_y_pred,gradient_boost = self.gradient_boosting(best_params["gradient_boost"].best_params_["learning_rate"],
-                                                       best_params["gradient_boost"].best_params_["max_depth"],
-                                                       best_params["gradient_boost"].best_params_["n_estimators"])
+        gradient_boost_y_pred,gradient_boost = self.gradient_boosting(best_params["gradient_boost"]["learning_rate"],
+                                                       best_params["gradient_boost"]["max_depth"],
+                                                       best_params["gradient_boost"]["n_estimators"])
         self.create_entry(gradient_boost_y_pred,"Gradient Boost (Grid Search)",self.grid_search_comparison_table)
 
 
         #AdaBoost
         ada_y_pred,ada_boost = self.ada_boost(
-            learning_rate=best_params["ada_boost"].best_params_["learning_rate"],
-            n_estimators=best_params["ada_boost"].best_params_["n_estimators"],
-            loss=best_params["ada_boost"].best_params_["loss"]
+            learning_rate=best_params["ada_boost"]["learning_rate"],
+            n_estimators=best_params["ada_boost"]["n_estimators"],
+            loss=best_params["ada_boost"]["loss"]
         )
         self.create_entry(ada_y_pred, "AdaBoost (Grid Search)", self.grid_search_comparison_table)
 
         #XGBoost
         xgb_y_pred,xg_boost = self.xg_boost(
-            learning_rate=best_params["xg_boost"].best_params_["learning_rate"],
-            max_depth=best_params["xg_boost"].best_params_["max_depth"],
-            n_estimators=best_params["xg_boost"].best_params_["n_estimators"],
-            subsample=best_params["xg_boost"].best_params_["subsample"]
+            learning_rate=best_params["xg_boost"]["learning_rate"],
+            max_depth=best_params["xg_boost"]["max_depth"],
+            n_estimators=best_params["xg_boost"]["n_estimators"],
+            subsample=best_params["xg_boost"]["subsample"]
         )
         self.create_entry(xgb_y_pred, "XGBoost (Grid Search)", self.grid_search_comparison_table)
 
         #MLP
         mlp_y_pred,mlp = self.mlp_regressor(
-            hidden_layer_sizes=best_params["mlp"].best_params_["hidden_layer_sizes"],
-            activation=best_params["mlp"].best_params_["activation"],
-            alpha=best_params["mlp"].best_params_["alpha"],
-            learning_rate=best_params["mlp"].best_params_["learning_rate"]
+            hidden_layer_sizes=best_params["mlp"]["hidden_layer_sizes"],
+            activation=best_params["mlp"]["activation"],
+            alpha=best_params["mlp"]["alpha"],
+            learning_rate=best_params["mlp"]["learning_rate"]
         )
         self.create_entry(mlp_y_pred, "MLP (Grid Search)", self.grid_search_comparison_table)
 
@@ -376,19 +385,14 @@ class compareModels:
     
     def create_entry(self,y_pred,model_name,datafame):
         MAE = mean_absolute_error(self.y_test,y_pred)
-        print(f"The Mean Absolute Error (MAE) is {MAE}.")
 
         MSE = mean_squared_error(self.y_test,y_pred)
-        print(f"The Mean Squred Error(MSE) is {MSE}.")
 
         RMSE = np.sqrt(MSE)
-        print(f"The Root Mean Squared Error(RMSE) is {RMSE}.")
 
         R2 = r2_score(self.y_test,y_pred)
-        print(f"The R2 Score is {R2}.")
 
         adj_r2 = 1-(1-r2_score(self.y_test,y_pred))*((self.X_test.shape[0]-1)/(self.X_test.shape[0]-self.X_test.shape[1]-1))
-        print(f"Adjusted R2 is {adj_r2}.")
 
         test_dict = {'Model':model_name,
               'MAE':round(MAE,4),
@@ -401,7 +405,7 @@ class compareModels:
     
 
 
-    def plot_results(self,y_pred, model_name, figsize=(8, 6), save_path=None):
+    def plot_results(self,y_pred, model_name, figsize=(8, 6), fontsize=12,save_path=None):
         r2 = r2_score(self.y_test, y_pred)
         mae = mean_absolute_error(self.y_test, y_pred)
         rmse = np.sqrt(mean_squared_error(self.y_test, y_pred))
@@ -414,38 +418,38 @@ class compareModels:
         min_val = min(self.y_test.min(), y_pred.min())
         max_val = max(self.y_test.max(), y_pred.max())
         ax1.plot([min_val, max_val], [min_val, max_val], 'r--', lw=2, label='Perfect Prediction')
-        ax1.set_xlabel('Actual Values', fontsize=11)
-        ax1.set_ylabel('Predicted Values', fontsize=11)
-        ax1.set_title('Predicted vs Actual', fontsize=12, fontweight='bold')
+        ax1.set_xlabel('Actual Values', fontsize=fontsize)
+        ax1.set_ylabel('Predicted Values', fontsize=fontsize)
+        ax1.set_title('Predicted vs Actual', fontsize=fontsize, fontweight='bold')
         textstr = f'$R^2 = {r2:.3f}$\nMAE = {mae:.2f}\nRMSE = {rmse:.2f}'
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-        ax1.text(0.05, 0.95, textstr, transform=ax1.transAxes, fontsize=9,
+        ax1.text(0.05, 0.95, textstr, transform=ax1.transAxes, fontsize=fontsize,
                 verticalalignment='top', bbox=props)
         ax1.legend(loc='lower right')
         
         ax2 = axes[0, 1]
         sns.regplot(x=y_pred, y=residuals, ax=ax2, line_kws={'color': 'red'}, scatter_kws={'alpha':0.5})
         ax2.axhline(y=0, color='gray', linestyle='--')
-        ax2.set_xlabel('Predicted Values', fontsize=11)
-        ax2.set_ylabel('Residuals', fontsize=11)
-        ax2.set_title('Residuals vs Predicted', fontsize=12, fontweight='bold')
+        ax2.set_xlabel('Predicted Values', fontsize=fontsize)
+        ax2.set_ylabel('Residuals', fontsize=fontsize)
+        ax2.set_title('Residuals vs Predicted', fontsize=fontsize, fontweight='bold')
         
         ax3 = axes[1, 0]
         sns.histplot(residuals, kde=True, ax=ax3, color='#2E86AB', bins=30)
-        ax3.set_xlabel('Residuals', fontsize=11)
-        ax3.set_ylabel('Frequency', fontsize=11)
-        ax3.set_title('Residual Distribution', fontsize=12, fontweight='bold')
+        ax3.set_xlabel('Residuals', fontsize=fontsize)
+        ax3.set_ylabel('Frequency', fontsize=fontsize)
+        ax3.set_title('Residual Distribution', fontsize=fontsize, fontweight='bold')
         
         ax4 = axes[1, 1]
         stats.probplot(residuals, dist="norm", plot=ax4)
-        ax4.set_title('Q-Q Plot', fontsize=12, fontweight='bold')
+        ax4.set_title('Q-Q Plot', fontsize=fontsize, fontweight='bold')
         ax4.get_lines()[0].set_marker('o')
         ax4.get_lines()[0].set_markersize(4)
         ax4.get_lines()[0].set_alpha(0.6)
         ax4.get_lines()[1].set_color('red')
         ax4.get_lines()[1].set_linewidth(2)
         
-        fig.suptitle(f"{model_name}",fontsize=16,fontweight="bold")
+        fig.suptitle(f"{model_name}",fontsize=fontsize,fontweight="bold")
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')

@@ -1,0 +1,890 @@
+---
+title: |
+  \begin{center}
+  \includegraphics[width=0.4\textwidth]{banner-fciencias-color-dark.png}\\[2em]
+  Proyecto Final del modulo 5.
+  \end{center}
+
+author: 
+  - Raúl Llamosas Alvarado
+  - Eumir Rendon Uresti
+  - Gabriela Peña Franco
+  - Daniela Ibarra Gatica
+  - Randy Jesús García Mejía
+  - Daniela Vázquez Sánchez
+
+
+format:
+    pdf:
+        fontsize: 8pt   
+        toc: true
+        toc-depth: 2
+        geometry: margin=1cm
+        fig-width: 4
+        fig-height: 3
+        code-block-bg: "C4CDD5"
+        include-in-header:
+          - text: |
+              \usepackage{graphicx}
+              \usepackage{titlesec}
+              \usepackage{tocloft}
+              \definecolor{mytitlecolor}{HTML}{0b4166}
+              % Títulos de sección en color
+              \titleformat{\section}{\color{mytitlecolor}\normalfont\Large\bfseries}{\thesection}{1em}{}
+              \titleformat{\subsection}{\color{mytitlecolor}\normalfont\large\bfseries}{\thesubsection}{1em}{}
+              \titleformat{\subsubsection}{\color{mytitlecolor}\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+              % Índice coloreado
+              \renewcommand{\cftsecfont}{\color{mytitlecolor}\bfseries}
+              \renewcommand{\cftsubsecfont}{\color{mytitlecolor}\bfseries}
+
+self-contained: true
+toc: true
+toc-depth: 2
+jupyter: python3
+params:
+  python_path: "~/Documentos/espacio_trabajo_intro_analisis_dat2/proyecto_modulo_5/.proyecto_5_env/bin/python"
+---
+
+
+
+Todo nuestro código se encuentra en el [siguiente repositorio de GitHub](https://github.com/MelodiousZero/proyecto_modulo_5), al cual le hemos dado acceso a los siguiente correos:
+
++ [inserte correo Alan Riva Palacio Cohen](correo.com). 
++ [inserte correo Jorge Ignacio Gonzalez Cazares](correo.com)
+
+
+
+El proyecto está ordenado de la siguiente forma:
+
+\begin{minipage}[t]{0.45\textwidth}
+\small
+\begin{verbatim}
++-- __init__.py
++-- README.md
++-- requirements.txt
++-- src
+    +-- EDA
+    |   +-- clean_dataset.py
+    |   +-- EDA.ipynb
+    |   +-- __init__.py
+    |   +-- seoul_bike_eda_report.html
+    +-- entregables
+    |   +-- presentacion.qmd
+    |   +-- reporte.html
+    |   +-- reporte.pdf
+    |   +-- reporte.qmd
+    +-- estructura.py
+    +-- ML
+        +-- __init__.py
+        +-- modelaje.py
+        +-- showcase_of_results.ipynb
+\end{verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+Separamos la limpieza del dataset y el modelaje en dos \texttt{.py} usando programación orientada a objetos para que después sean llamados dentro de los \texttt{.ipynb} usando sus respectivos métodos de clase.
+\end{minipage}
+
+# Introducción
+
+## Problema a resolver
+
+Pronóstico de Demanda Espaciotemporal para Bicicletas Compartidas
+
++ Idea Principal: Predecir la cantidad de bicicletas alquiladas por hora en función de variables meteorológicas e indicadores temporales.
++ Base de Datos: Seoul Bike Sharing Demand (UCI).
+
+## Metodología
+
++ Limpieza + EDA: codificación de variables, creación de variables categóricas y creación de variables cíclicas.
++ Escalamiento usando `Standard Scaler`
++ Modelación usando distintos modelos 
++ Métricas con `MAE`, `MSE` , `RMSE`, `R²`, `R²-ajustado`.
+
+
+
+
+# EDA
+
+Vamos a importar el dataset de 'Seoul Bike Sharing Demand' del repositorio de Machine Learning de UC Irvine, que [podemos encontrar aquí](https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand) siguiendo la documentación de importación que en dicha URL se encuentra.
+
+```{python}
+#| output: false
+#| echo: false
+
+from ucimlrepo import fetch_ucirepo 
+import pandas as pd 
+# fetch dataset 
+seoul_bike_sharing_demand = fetch_ucirepo(id=560) 
+  
+# data (as pandas dataframes) 
+X = seoul_bike_sharing_demand.data.features 
+y = seoul_bike_sharing_demand.data.targets 
+  
+# metadata 
+print(seoul_bike_sharing_demand.metadata) 
+  
+# variable information 
+print(seoul_bike_sharing_demand.variables) 
+
+
+seoul_bike_sharing_demand_df = pd.concat([seoul_bike_sharing_demand.data.features, seoul_bike_sharing_demand.data.targets], axis=1)
+```
+
+Vamos a limpiar el dataset usando `clean_dataset.py`
+
+```{python}
+#| output: false
+#| echo: false
+import sys
+import os
+# Add the parent directory (proyecto/) to the Python path
+sys.path.insert(0, os.path.abspath('..'))
+from EDA.clean_dataset import cleanDataFrame
+
+
+clean_df = cleanDataFrame()
+
+clean_df.make_date()
+clean_df.make_weekend()
+
+seoul_bike_sharing_demand_df = clean_df.dataframe
+```
+
+Y después haremos un EDA inicial con `Profile Report`.
+
+```{python}
+#| output: false
+#| echo: false
+import pandas as pd
+from ydata_profiling import ProfileReport
+
+profile = ProfileReport(seoul_bike_sharing_demand_df, title="Seoul Bike EDA Report")
+profile.to_notebook_iframe()
+# profile.to_file("seoul_bike_eda_report.html")
+```
+
+![profile report](dataset_statistics.png){width=50%}
+
+Podemos notar que no tiene NAs en las filas.Además del EDA inicial queremos ilustrar las siguientes observaciones:
+
+```{python}
+#| warning: false
+#| echo: false
+
+%matplotlib inline
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+sns.set_style("whitegrid")
+palette = ["#CD2E3A", "#0047A0", "#000000", "#FFFFFF"]   # usé los colores de la bandera de Corea del Sur
+
+categorical_columns = ["Seasons", "Holiday", "is_weekend", "Month", "Day"]
+
+day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+month_order = ['January', 'February', 'March', 'April', 'May', 'June',
+               'July', 'August', 'September', 'October', 'November', 'December']
+
+fig, axes = plt.subplots(2, 3, figsize=(6, 4))
+axes = axes.flatten()
+
+season_names = {0: 'Spring', 1: 'Summer', 2: 'Autumn', 3: 'Winter'}
+season_order = ['Spring', 'Summer', 'Autumn', 'Winter']
+
+day_map = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2,
+            'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+
+month_map = {'January': 0, 'February': 1, 'March': 2, 'April': 3,
+            'May': 4, 'June': 5, 'July': 6, 'August': 7,
+            'September': 8, 'October': 9, 'November': 10, 'December': 11}
+
+for i, col in enumerate(categorical_columns):
+    if col == 'Day':
+        order = day_order
+        x_data = seoul_bike_sharing_demand_df[col].map(day_map)
+    elif col == 'Month':
+        order = month_order
+        x_data = seoul_bike_sharing_demand_df[col].map(month_map)
+
+    elif col == 'Seasons':
+        order = season_order
+        x_data = seoul_bike_sharing_demand_df[col].map(season_names)
+    else:
+        order = None   
+
+    sns.barplot(data=seoul_bike_sharing_demand_df,
+                x=col, y='Rented Bike Count',
+                hue=col, palette=palette, legend=False,
+                order=order,                    
+                edgecolor='black', linewidth=0.8,
+                ax=axes[i])
+    axes[i].set_title(f'{col}', fontsize=6, fontweight='bold')
+    axes[i].set_xlabel(col, fontsize=6)
+    axes[i].set_ylabel('Rented Bike Count', fontsize=6)
+    axes[i].tick_params(axis='x', rotation=45, labelsize=3)
+
+fig.delaxes(axes[5])
+plt.tight_layout()
+plt.show()
+
+```
+
+Con base en lo anterior, las observaciones son:
+
++ La renta de bicicletas aumenta en primavera y verano (debido a que son condiciones más agradables para rodar)
++ Se rentan más bicicletas en días que no son festivos (la gente las usa para ir a trabajar, probablemente)
++ Se rentan más o menos en una misma cantidad entre fin de semana o entre semana.
++ La gráfica de los meses nos muestra la tendencia de las temporadas. 
++ El día con menos rentas es domingo (probablemente porque la gente descansa ese día)
+
+```{python}
+plt.figure(figsize=(6,3))
+sns.pointplot(x=seoul_bike_sharing_demand_df['Hour'],
+              y=seoul_bike_sharing_demand_df['Rented Bike Count'],
+              hue=seoul_bike_sharing_demand_df['Holiday'],
+              palette={"Holiday": "#CD2E3A", "No Holiday": "#0047A0"})
+plt.title("Patrón de rentas de bicicletas basado en hora discriminando por día festivo.")
+
+# Add vertical lines at hour 8 and hour 18
+plt.axvline(x=8, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+plt.axvline(x=18, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+
+plt.show()
+```
+
+Observaciones de la gráfica de arriba serían:
+
++ En días no festivos los picos se encuentran en las horas de entrada y salida de las oficinas.
++ En días festivos no hay tales picos es una gráfica más suave que va disminuyendo conforme acaba el día.
+  
+Esta gráfica muestra una clara tendencia de uso para transportarse hacia desde los espacios de trabajo.
+
+```{python}
+#| echo: false
+
+plt.figure(figsize=(6,3))
+
+# South Korean flag colors (4 colors for 4 seasons)
+# Order: red, blue, black, white – you can assign them to seasons as you prefer
+seasons_palette = ["#CD2E3A", "#0047A0", "#000000", "#B09709B4"]
+
+sns.pointplot(x=seoul_bike_sharing_demand_df['Hour'],
+              y=seoul_bike_sharing_demand_df['Rented Bike Count'],
+              hue=seoul_bike_sharing_demand_df['Seasons'],
+              palette=seasons_palette)
+
+plt.title("Patrón de rentas por hora tomando en cuenta temporadas")
+plt.axvline(x=8, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+plt.axvline(x=18, color='black', linestyle='--', linewidth=1.5, alpha=0.7)
+plt.show()
+```
+
+Observaciones:
+
++ Los picos permacen pero en invierno la gente renta menos bicicletas (debido a que son condiciones más adversas para rodar)
++ En verano y otoño se rentan más.
+
+```{python}
+
+df1 = seoul_bike_sharing_demand_df["Dew point temperature"]
+df2 = seoul_bike_sharing_demand_df["Temperature"]
+
+side_by_side = pd.concat([df1, df2], axis=1)
+side_by_side
+```
+
+Las dos columnas de arriba están muy correlacionadas entre sí y no aportan información muy distinta. Las dos son de temperatura. Eliminaré la primera, 'Dew Point Temperature'
+
+
+## Codificación de variables categorícas.
+
+Después de haber hecho el EDA procedemos a codificar las variables categóricas para que estén listas para el modelado. Lo hacemos de la siguiente manera 
+```{python}
+
+def replace_holiday(self):
+    self.dataframe['Holiday'] = self.dataframe['Holiday'].apply(lambda x: 1 if x=="Holiday" else 0 )
+    
+def replace_functioning_day(self):
+    self.dataframe['Functioning Day'] = self.dataframe['Functioning Day'].apply(lambda x: 1 if x=="Yes" else 0 )
+
+def encode(self):
+    season_map = {'Spring': 0, 'Summer': 1, 'Autumn': 2, 'Winter': 3}
+    self.dataframe['Seasons'] = self.dataframe['Seasons'].map(season_map)
+    day_map = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2,
+            'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+
+    month_map = {'January': 0, 'February': 1, 'March': 2, 'April': 3,
+                'May': 4, 'June': 5, 'July': 6, 'August': 7,
+                'September': 8, 'October': 9, 'November': 10, 'December': 11}
+    functioning_day_map = {"Yes":1,"No":0}
+
+    self.dataframe['Day'] = self.dataframe['Day'].map(day_map)
+    self.dataframe['Month'] = self.dataframe['Month'].map(month_map)
+    self.dataframe["Functioning Day"]=self.dataframe["Functioning Day"].map(functioning_day_map)
+```
+
+También, tomamos en cuenta la estacionalidad temporal al usar la siguiente función
+```{python}
+def make_sin_cos(self):
+        self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['hour_cos'] = np.cos(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['dow_sin'] = np.sin(2 * np.pi * self.dataframe['Day'] / 7)
+        self.dataframe['dow_cos'] = np.cos(2 * np.pi * self.dataframe['Day'] / 7)
+
+        self.dataframe['month_sin'] = np.sin(2 * np.pi * self.dataframe['Month'] / 12)
+        self.dataframe['month_cos'] = np.cos(2 * np.pi * self.dataframe['Month'] / 12)
+    
+```
+
+De esta manera, las 23 horas están "cerca" de las 1:00AM del siguiente día. Tomando así en cuenta la estacionalidad temporal de nuestro dataset. Que resultará ser muy importante después. 
+
+Todas estas modificaciones de arriba más la descarga del dataset las reunimos en la siguiente función para poder ser llamada en otros archivos, particularmente en la clase que hace todo el modelado. Se llama de la siguiente manera:
+
+```{python}
+def run_clean(self):
+        self.make_date()
+        self.make_weekend()
+        self.drop_unneccesary_columns()
+        self.replace_holiday()
+        self.encode()
+        self.make_sin_cos()
+        output_df = self.dataframe
+        return output_df
+```
+
+
+Un ejemplo de como se manda a llamar es:
+```{python}
+#| output: false
+
+cleaning_df = cleanDataFrame()
+seoul_bike_sharing_demand_df = cleaning_df.run_clean()
+```
+
+## Escalamiento de variables.
+
+El escalamiento de variables, el cual es muy importante para este proyecto, se hace en la clase `compareModels` particularmente aquí:
+
+```{python}
+
+class compareModels:
+    def __init__(self):
+
+        self.dataframe = cleanDataFrame().run_clean()
+        self.dependent_variable = "Rented Bike Count"
+        self.indepent_variables = list(set(self.dataframe.columns.tolist())-{self.dependent_variable})
+        self.y = np.sqrt(self.dataframe[self.dependent_variable])
+        self.X = self.dataframe.drop("Rented Bike Count",axis=1)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size = 0.2, random_state = 0)
+        self.columns_table = ['Model', 'MAE', 'MSE', 'RMSE', 'R2_score', 'Adjusted_R2']
+        self.comparison_table = pd.DataFrame(columns=self.columns_table)
+        self.alphas = np.logspace(-4,2,50)
+        self.l1_ratios = np.linspace(0.1, 1.0, 6)
+        self.grid_search_comparison_table = pd.DataFrame(columns=self.columns_table)
+        self.seed = 97
+        self.scaler = StandardScaler() #<----- aquí
+```
+
+Es una variable de clase que después es llamada en cada método de modelación de la siguiente forma 
+```{python}
+#| eval: false
+X_train_scaled = self.scaler.fit_transform(self.X_train)
+X_test_scaled = self.scaler.transform(self.X_test)
+```
+
+
+# Modelado
+
+Vamos a inicializar la clase:
+
+```{python}
+#| output: false
+
+import sys
+sys.path.insert(0, '..')     
+from ML.modelaje import compareModels
+
+comparacion = compareModels()
+```
+## Regresión Logística. 
+
+### Poisson (Justificación)
+
+
+Nuestra variable target está compuesto de enteros no negativos: 
+
+```{python}
+comparacion.dataframe["Rented Bike Count"][0:10]
+```
+
+Una regresión lineal estandar incorrectamente intentaría predecir valores negativos y además, la regresión lineal estándar asume **homoscedasticidad**. Como nuestra variable target es un conteo, esta suposición **no** se cumple, ya que la varianza crece con la media.
+
+
+De hecho, podemos notar en los gráficos de abajo ese patrón de **heteroscedasticidad** con los residuales.
+
+Ahora, un modelo `GLM Poisson` modela el logaritmo de la media y explicitamente asume que la varianza es igual a la media, usa un esquema de pesos ponderados. Esto en teoría debería resolver el problema de **heteroscedasticidad**. Para prestarle atención a la estacionalidad temporal, recordemos lo que hicimos con el dataframe en la etapa de limpieza:
+
+```{python}
+import numpy as np
+def make_sin_cos(self):
+        self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['hour_cos'] = np.cos(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['dow_sin'] = np.sin(2 * np.pi * self.dataframe['Day'] / 7)
+        self.dataframe['dow_cos'] = np.cos(2 * np.pi * self.dataframe['Day'] / 7)
+
+        self.dataframe['month_sin'] = np.sin(2 * np.pi * self.dataframe['Month'] / 12)
+        self.dataframe['month_cos'] = np.cos(2 * np.pi * self.dataframe['Month'] / 12)
+```
+
+Esta función nos ayuda a incluir esta información de estacionalidad temporal, puesto que la hora 23 estaría "cerca" de la hora 0. Esto ayudará a que `GLM Poisson` tome en cuenta los "picos" de demanda de las 8:00AM y 6:00PM que notamos en el EDA. De no incluir lo de arriba, el modelo buscaría una tendencia monotona , lo cual no brinda mucha información ni es representativo de lo que pasa en la vida real. Vamos a correr este modelo:
+
+```{python}
+#| output: false
+
+y_pred_poisson,poisson = comparacion.poisson_GLM()
+comparacion.create_entry(y_pred_poisson,"GLM Poisson",comparacion.comparison_table)
+comparacion.create_entry(y_pred_poisson,"GLM Poisson",comparacion.grid_search_comparison_table)
+
+```
+
+Ahora, corramos los demás:
+
+### Regresión Lineal
+
+```{python}
+#| output: false
+
+y_pred,linear_regressor = comparacion.linear_regression()
+comparacion.plot_results(y_pred,"Linear Regression",figsize=(7,5),fontsize=4)
+comparacion.create_entry(y_pred,"Linear Regression",comparacion.comparison_table)
+```
+
+```{python}
+
+```
+
+### Lasso
+
+```{python}
+#| output: false
+
+y_pred,lasso = comparacion.lasso()
+comparacion.create_entry(y_pred,"Lasso",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Lasso",figsize=(7,5),fontsize=4)
+```
+
+### Ridge
+
+```{python}
+#| output: false
+
+y_pred,ridge = comparacion.ridge()
+comparacion.create_entry(y_pred,"Ridge",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Ridge",figsize=(7,5),fontsize=4)
+```
+
+### Elastic Net
+
+```{python}
+#| output: false
+
+y_pred_elastic,elastic_net= comparacion.elastic_net()
+comparacion.create_entry(y_pred_elastic,"Elastic Net",comparacion.comparison_table)
+
+```
+
+La tabla comparativa de estos cuatro es: 
+```{python}
+comparacion.comparison_table
+```
+
+El mejor modelo tiene,`GLM Poisson` , tiene este gráfico:
+
+```{python}
+comparacion.plot_results(y_pred_poisson,"GLM Poisson",figsize=(6,4),fontsize=4)
+```
+
+Mientras que el peor,`Elastic Net`, tiene este:
+
+```{python}
+comparacion.plot_results(y_pred_elastic,"Elastic Net",figsize=(6,4),fontsize=4)
+
+```
+
+
+### Interpretación de coeficientes.
+
+```{python}
+#| echo: false
+#| warning: false
+#| fig-width: 6
+#| fig-height: 5
+
+import matplotlib.pyplot as plt
+
+# Definir modelos y sus nombres
+modelos = [
+    ('Lasso', lasso.coef_),
+    ('Ridge', ridge.coef_),
+    ('Regresión Lineal', linear_regressor.coef_),
+    ('Elastic Net', elastic_net.coef_)
+]
+
+features = comparacion.X.columns
+
+fig, axes = plt.subplots(2, 2, figsize=(8, 6))
+axes = axes.flatten()
+
+for ax, (nombre, coefs) in zip(axes, modelos):
+    ax.bar(features, coefs)
+    ax.set_xticklabels(features, rotation=90, fontsize=4)
+    ax.set_title(f'Coeficientes – {nombre}', fontsize=6)
+    ax.tick_params(axis='y', labelsize=4)
+
+plt.tight_layout()
+plt.show()
+```
+
+La interpretación es la siguiente:
+
++ Podemos notar que `Lasso` lleva los coeficientes de las variables menos significativas a 0.
++ En cambio, `Ridge` las lleva cercanas a cero pero no son cero, exactamente.
++ `Elastic Net` Al ser una mezcla de ambas, puede producir coeficientes cero, en nuestro caso parece que es más similar a `Ridge`
++ `Regresión Lineal`, como `Functioning Day` es una variable binaria que representa si un dia el sistema de bicis estaba activo o no, que esté tan alto refleja una gran diferencia en rentas entre esos dos estados. 
+
+## Modelos de Ensamble y Redes.
+
+Empecemos con los modelos de Ensamble.
+
+### Decision Tree
+
+```{python}
+#| output: false
+
+y_pred,decision_tree = comparacion.decision_tree()
+comparacion.create_entry(y_pred,"Decision Tree",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Decision Tree",figsize=(6,4),fontsize=4)
+```
+
+### Random Forest
+
+```{python}
+#| output: false
+
+y_pred_random_forest,random_forest = comparacion.random_forest()
+comparacion.create_entry(y_pred_random_forest,"Random Forest",comparacion.comparison_table)
+
+```
+
+### Gradient Boosting
+
+```{python}
+#| output: false
+
+y_pred,gradient_boosting = comparacion.gradient_boosting()
+comparacion.create_entry(y_pred,"Gradient Boosting",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"Gradient Boosting",figsize=(6,4),fontsize=4)
+```
+
+### Ada Boost
+```{python}
+#| output: false
+
+y_pred,ada_boost = comparacion.ada_boost()
+comparacion.create_entry(y_pred,"AdaBoost",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"AdaBoost",figsize=(6,4),fontsize=4)
+```
+### XG Boost
+```{python}
+#| output: false
+
+y_pred,xgboost = comparacion.xg_boost()
+comparacion.create_entry(y_pred,"XGBoost",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"XGBoost",figsize=(6,4),fontsize=4)
+```
+
+Finalmente, con el modelo de redes (MLP)
+
+### MLP
+```{python}
+#| output: false
+
+y_pred,mlp = comparacion.mlp_regressor()
+comparacion.create_entry(y_pred,"MLP",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"MLP",figsize=(6,4),fontsize=4)
+```
+
+Los resultados antes de usar validación cruzada son:
+
+```{python}
+comparacion.comparison_table.sort_values(by='R2_score', ascending=False)
+```
+
+y el grafico del mejor modelo, `RandomForest`, es : 
+```{python}
+comparacion.plot_results(y_pred_random_forest,"Random Forest",figsize=(6,4),fontsize=4)
+```
+
+
+### Uso de Validación Cruzada
+
+
+La siguiente función `re_run_with_better_params()` extraerá los parametros y correrá los modelos con dichos parametros. La forma en la cual lo hace es la siguiente, consigue todos los parámetros con la siguiente función
+
+```{python}
+def grid_searching(self,scoring="r2"):
+        #Escalamiento variables.
+        X_train_scaled = self.scaler.fit_transform(self.X_train)
+
+        #lasso
+        lasso_param_grid = {"alpha":self.alphas}
+        lasso = Lasso(max_iter=10000)
+        lasso_grid = GridSearchCV(lasso,lasso_param_grid,cv=5,scoring="r2")
+        lasso_grid.fit(X_train_scaled, self.y_train)
+        #ridge
+        ridge_param_grid = {"alpha":self.alphas}
+        ridge = Ridge(max_iter=10000)
+        ridge_grid = GridSearchCV(ridge,ridge_param_grid,cv=5,scoring="r2")
+        ridge_grid.fit(X_train_scaled, self.y_train)
+        #elastic net
+        elastic_net_paragram_grid = {
+            "alpha": self.alphas,
+            "l1_ratio": self.l1_ratios
+        }
+        elastic_net = ElasticNet(max_iter=10000)
+        elastic_net_grid = GridSearchCV(elastic_net,elastic_net_paragram_grid,cv=5,scoring="r2")
+        elastic_net_grid.fit(X_train_scaled, self.y_train)
+        #decision tree
+        decision_tree_param_grid = {
+            'max_depth': [3, 5, 7, 9, 11, 15, None],
+            'min_samples_split': [2, 5, 10, 20],
+            'min_samples_leaf': [1, 2, 5, 10]
+        }
+        decision_tree = DecisionTreeRegressor(random_state=self.seed)
+        decision_tree_grid = GridSearchCV(decision_tree,decision_tree_param_grid,cv=5,scoring="r2")
+        decision_tree_grid.fit(self.X_train,self.y_train)
+        #random forest
+        random_forest_param_grid = {
+            'n_estimators': [100, 200],
+            'max_depth': [5, 10, 15, None],
+            'min_samples_split': [2, 5, 10]
+        }
+        random_forest = RandomForestRegressor(random_state=self.seed)
+        random_forest_grid = GridSearchCV(random_forest,random_forest_param_grid,cv=5,scoring="r2")
+        random_forest_grid.fit(self.X_train,self.y_train)
+        #gradient_boosting
+        gradient_boosting_param_grid = {
+            'learning_rate': [0.01, 0.05, 0.1, 0.2],
+            'n_estimators': [100, 200, 300],
+            'max_depth': [3, 5, 7]
+        }
+        gradient_boosting = GradientBoostingRegressor(random_state=self.seed)
+        gradient_boosting_grid = GridSearchCV(gradient_boosting,gradient_boosting_param_grid,cv=5,scoring="r2")
+        gradient_boosting_grid.fit(self.X_train,self.y_train)
+
+        #AdaBoost
+        ada_param_grid = {
+            'n_estimators': [50, 100, 200],
+            'learning_rate': [0.5, 1.0, 2.0],
+            'loss': ['linear', 'square', 'exponential']
+        }
+        ada = AdaBoostRegressor(random_state=self.seed)
+        ada_grid = GridSearchCV(ada, ada_param_grid, cv=5, scoring='r2')
+        ada_grid.fit(X_train_scaled, self.y_train)
+
+        #XGBoost
+        xgb_param_grid = {
+            'n_estimators': [100, 200, 300],
+            'max_depth': [3, 5, 7],
+            'learning_rate': [0.01, 0.1, 0.2],
+            'subsample': [0.7, 0.8, 1.0]
+        }
+        xgb = XGBRegressor(random_state=self.seed, verbosity=0)
+        xgb_grid = GridSearchCV(xgb, xgb_param_grid, cv=5, scoring='r2')
+        xgb_grid.fit(X_train_scaled, self.y_train)
+
+        #MLP
+        mlp_param_grid = {
+            'hidden_layer_sizes': [(50,), (100,), (50, 25)],
+            'activation': ['relu', 'tanh'],
+            'alpha': [0.0001, 0.001, 0.01],
+            'learning_rate': ['constant', 'adaptive']
+        }
+        mlp = MLPRegressor(max_iter=1000, random_state=self.seed, early_stopping=True)
+        mlp_grid = GridSearchCV(mlp, mlp_param_grid, cv=5, scoring='r2')
+        mlp_grid.fit(X_train_scaled, self.y_train)
+
+        best_params = {
+            "lasso":lasso_grid,
+            "ridge": ridge_grid,
+            "elastic_net": elastic_net_grid,
+            "decision_tree":decision_tree_grid,
+            "random_forest": random_forest_grid,
+            "gradient_boost": gradient_boosting_grid,
+            "ada_boost": ada_grid,           
+            "xg_boost": xgb_grid,            
+            "mlp": mlp_grid   
+        }
+
+        print(best_params)
+
+        return best_params
+```
+Y después vuelve a correr los modelos con los mejores parámetros. Vamos a ejecutarlo, toma en promedio **20** minutos así que usaremos un diccionario con los resultados de una previa ejecución:
+
+```{python}
+import json
+with open('best_params.json', 'r') as f:
+    best_params_dict = json.load(f)
+```
+
+
+```{python}
+#| output: false
+
+y_predictions,best_params = comparacion.re_run_with_better_params(best_params_dict)
+```
+
+A continuación, una comparación entre ambas tablas, la primera es con `GridSearchCV`:
+
+```{python}
+#| echo: false
+comparacion.grid_search_comparison_table.sort_values(by='R2_score', ascending=False)
+```
+
+
+```{python}
+#| echo: false
+comparacion.comparison_table.sort_values(by='R2_score', ascending=False)
+```
+
+### Funciones de perdida.
+
+De los mejores modelos, vamos a comparar `MAE` vs `MSE`, empecemos con `GradientBoost` ya que admite un parametro `loss` para especificar `MAE` o `MSE`. 
+
+```{python}
+import pandas as pd
+tabla_comparativa_gradientboost = pd.DataFrame(columns=comparacion.columns_table)
+y_pred,gradient_boosting = comparacion.gradient_boosting(
+                                                    best_params["gradient_boost"]["learning_rate"],
+                                                    best_params["gradient_boost"]["max_depth"],
+                                                    best_params["gradient_boost"]["n_estimators"],
+                                                    loss="squared_error")
+tabla_comparativa_gradientboost=comparacion.create_entry(y_pred,"Gradient Boosting (MSE)",tabla_comparativa_gradientboost)
+comparacion.plot_results(y_pred,"Gradient Boosting (MSE)",figsize=(6,4),fontsize=4)
+tabla_comparativa_gradientboost
+```
+
+```{python}
+import pandas as pd
+y_pred,gradient_boosting = comparacion.gradient_boosting(
+                                                    best_params["gradient_boost"]["learning_rate"],
+                                                    best_params["gradient_boost"]["max_depth"],
+                                                    best_params["gradient_boost"]["n_estimators"],
+                                                    loss="absolute_error")
+tabla_comparativa_gradientboost=comparacion.create_entry(y_pred,"Gradient Boosting (MAE)",tabla_comparativa_gradientboost)
+comparacion.plot_results(y_pred,"Gradient Boosting (MAE)",figsize=(6,4),fontsize=4)
+```
+
+```{python}
+tabla_comparativa_gradientboost
+```
+
+Tenemos que para `GradientBoost` MSE es mejor.
+
+Ahora intentemos con el otro modelo que resultó ser muy bueno, `XGBoost`: 
+
+```{python}
+tabla_comparativa_xgboost = pd.DataFrame(columns=comparacion.columns_table)
+y_pred_xgboost,xgboost = comparacion.xg_boost(
+                                                    best_params["xg_boost"]["learning_rate"],
+                                                    best_params["xg_boost"]["max_depth"],
+                                                    best_params["xg_boost"]["n_estimators"],
+                                                    objective="reg:squarederror")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred_xgboost,"XGBoost (MSE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred_xgboost,"XGBoost(MSE)",figsize=(6,4),fontsize=4)
+tabla_comparativa_xgboost
+```
+
+```{python}
+y_pred,xgboost = comparacion.xg_boost(
+                                                    best_params["xg_boost"]["learning_rate"],
+                                                    best_params["xg_boost"]["max_depth"],
+                                                    best_params["xg_boost"]["n_estimators"],
+                                                    objective="reg:absoluteerror")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MAE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred,"XGBoost(MAE)",figsize=(6,4),fontsize=4)
+tabla_comparativa_xgboost
+```
+
+En ambos casos, correrlos con `MSE` resultó ser mejor. 
+
+La razón por la cual `MSE` resultó ser mejor es por como procesé previamente la variable dependiente (`Rented Bike Count`) recordemos que hice lo siguiente:
+
+```{python}
+#| eval: false
+
+self.y = np.sqrt(self.dataframe[self.dependent_variable])
+```
+
+De esta manera reduje la influencia de los picos extremos de demanda, los cuales vimos en la sección de EDA que ocurrían alrededor de los horarios de entrada y salida de oficinas. Después de la raíz cuadrada los valores se comprimen, por ejemplo si cerca las 8:00AM se rentan más de 2000 bicis pero a las 12:00AM se rentan 500, la raíz cuadrada los manda respectivamente a 44.7 y a 22.4 por lo que la distribución se vuelve más simétrica y normal. 
+
+Lo quise hacer de esta manera para suavizar dichos picos de demanda y no considerarlos outliers puesto que dan mucha información acerca de patrones de uso.
+
+
+## Interpretación de resultados y conclusión
+
+Al final la tabla quedó así:
+
+```{python}
+comparacion.grid_search_comparison_table.sort_values(by='R2_score', ascending=False)
+```
+
+Con la grafica del mejor modelo así:
+
+```{python}
+comparacion.plot_results(y_pred_xgboost,"XGBoost",figsize=(7,4),fontsize=6)
+```
+
+## Conclusión
+
+
+Existe una diferencia muy marcada entre las dos familias de modelos evaluados:
+
++ Modelos Lineales Regularizados (Lasso, Ridge, Elastic Net) + Poisson
++ Modelos de Ensamble basados en árboles + MLP
+
+Poisson ofreció una mejora significativa con respecto de Lasso, Ridge y Elastic Net, probablemente porque dado los supuestos es el modelo adecuado si nos limitaramos a Modelos Lineales Regularizados (es una variable de conteo, etc) pero aún así está muy lejos del segundo grupo mencionado en la lista de arriba en términos de _perfomance_. 
+
+La demanda de bicicletas tiene que ser no-lineal debido a la relación entre distintas variables como lo puede ser la humedad, la visibilidad, etc, por lo que los modelos del segundo grupo mencionado son mejores, estos captan las complejas interacciones y la fuerte estacionalidad horaria. 
+
+Además, usar `MSE` y hacer la modificación de raíz cuadrada a nuestra variable dependiente resultó ser un acierto:
+
+```{python}
+#| eval: false
+
+self.y = np.sqrt(self.dataframe[self.dependent_variable])
+```
+
+
+Dado que logramos suavizar los picos de demanda horaria sin removerlos o considerarlos como _outliers_. 
+También, incluir columnas de estacionalidad temporal como lo son los senos y cosenos usando las horas y días fue un acierto también
+
+```{python}
+def make_sin_cos(self):
+        self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['hour_cos'] = np.cos(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['dow_sin'] = np.sin(2 * np.pi * self.dataframe['Day'] / 7)
+        self.dataframe['dow_cos'] = np.cos(2 * np.pi * self.dataframe['Day'] / 7)
+
+        self.dataframe['month_sin'] = np.sin(2 * np.pi * self.dataframe['Month'] / 12)
+        self.dataframe['month_cos'] = np.cos(2 * np.pi * self.dataframe['Month'] / 12)
+    
+```
+
+Dado que con esto prestamos atención a la estacionalidad temporal, contextualizamos así las variables de hora, día y mes.

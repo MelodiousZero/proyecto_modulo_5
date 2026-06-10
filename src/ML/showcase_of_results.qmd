@@ -1,0 +1,363 @@
+---
+title: Modelaje y presentación de resultados.
+jupyter: python3
+---
+
+
+
+Aquí haremos un showcase de los resultados. Usamos Programación Orientada a Objetos para dejar acomodados de forma más ordenada los distintos modelos y resultados. Al final haremos una tabla comparativa.
+
+Primero, cargaremos nuestra clase `compareModels` la cual tiene los métodos para hacer la predicción. También en dicha clase se encuentra los métodos para hacer `GridSearchCV`. Se encuentran métodos para hacer gráficos también.
+
+```{python}
+import sys
+sys.path.insert(0, '..')     
+from modelaje import compareModels
+
+comparacion = compareModels()
+comparacion.dependent_variable
+```
+
+## Regresión Lineal
+
+```{python}
+y_pred,linear_regressor = comparacion.linear_regression()
+```
+
+```{python}
+comparacion.plot_results(y_pred,"Linear Regression")
+comparacion.create_entry(y_pred,"Linear Regression",comparacion.comparison_table)
+```
+
+## Lasso
+
+```{python}
+y_pred,lasso = comparacion.lasso()
+comparacion.create_entry(y_pred,"Lasso",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Lasso")
+```
+
+## Ridge
+
+```{python}
+y_pred,ridge = comparacion.ridge()
+comparacion.create_entry(y_pred,"Ridge",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Ridge")
+```
+
+## Elastic Net
+
+```{python}
+y_pred,elastic_net= comparacion.elastic_net()
+comparacion.create_entry(y_pred,"Elastic Net",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Elastic Net")
+```
+
+## Decision Tree
+
+```{python}
+y_pred,decision_tree = comparacion.decision_tree()
+comparacion.create_entry(y_pred,"Decision Tree",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Decision Tree")
+```
+
+## Random Forest
+
+```{python}
+y_pred,random_forest = comparacion.random_forest()
+comparacion.create_entry(y_pred,"Random Forest",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Random Forest")
+```
+
+## Gradient Boosting
+
+```{python}
+y_pred,gradient_boosting = comparacion.gradient_boosting()
+comparacion.create_entry(y_pred,"Gradient Boosting",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"Gradient Boosting")
+```
+
+## Modelos de Redes
+Vamos a usar los siguientes modelos de redes e incluirlos en nuestra tabla: `AdaBoost`, `XGBoost` y para el Perceptrón Multicapa usaremos `MLP`.
+
+```{python}
+y_pred,ada_boost = comparacion.ada_boost()
+comparacion.create_entry(y_pred,"AdaBoost",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"AdaBoost")
+```
+
+```{python}
+y_pred,xgboost = comparacion.xg_boost()
+comparacion.create_entry(y_pred,"XGBoost",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"XGBoost")
+```
+
+```{python}
+y_pred,mlp = comparacion.mlp_regressor()
+comparacion.create_entry(y_pred,"MLP",comparacion.comparison_table)
+comparacion.plot_results(y_pred,"MLP")
+```
+
+## Resultados (Sin GridSearchCV)
+
+La siguiente tabla muestra los resultados de los distintos modelos, sin hacer uso de `GridSearchCV`
+
+```{python}
+comparacion.comparison_table
+```
+
+Como podemos ver, los mejores modelos resultaron ser `Random Forest` y `Gradient Boosting`. Pero, no hemos optimizado los parámetros aún. Procedemos a usar `GridSearchCV`. La siguiente función buscará los mejores parámetros para todos los modelos, regresara un diccionario con los parámetros para cada modelo. 
+
+La siguiente función extraerá los parametros y correrá los modelos con dichos parametros.
+
+```{python}
+y_predictions,best_params = comparacion.re_run_with_better_params()
+```
+
+```{python}
+comparacion.plot_results(y_predictions["lasso"],"Lasso (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["ridge"],"Ridge (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["elastic_net"],"Elastic Net (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["decision_tree"],"Decision Tree (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["random_forest"],"Random Forest (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["gradient_boost"],"Gradient Boost (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["ada_boost"],"AdaBoost (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["xgboost"],"XGBoost (Grid Search)")
+```
+
+```{python}
+comparacion.plot_results(y_predictions["mlp"],"MLP (Grid Search)")
+```
+
+## Comparativa de resultados
+
+A continuación, una comparación entre ambas tablas, la primera es con `GridSearchCV`:
+
+```{python}
+comparacion.grid_search_comparison_table
+```
+
+```{python}
+comparacion.comparison_table
+```
+
+Podemos notar que el `GridSearch` sí mejoró los resultados. Random Forest ya era bueno asi que las mejoras fueron pequeñas. `Gradient Boosting` mejoró significamente.Pero quien se llevó la mejora más significativa fue `XGBoost` convirtiendose en el nuevo campeón. Son estos dos los mejores de todos los modelos usados.Las features con más peso fueron:
+
+```{python}
+comparacion.most_important_features()
+```
+
+## GLM Poisson: Justificación
+
+Nuestra variable target está compuesto de enteros no negativos: 
+
+```{python}
+comparacion.dataframe["Rented Bike Count"][0:10]
+```
+
+Una regresión lineal estandar incorrectamente intentaría predecir valores negativos y además, la regresión lineal estándar asume **homoscedasticidad**. Como nuestra variable target es un conteo, esta suposición **no** se cumple, ya que la varianza crece con la media.
+
+
+De hecho, podemos notar en los gráficos de arriba ese patrón de **heteroscedasticidad** con los residuales, como por ejemplo:
+
+```{python}
+comparacion.plot_results(y_predictions["decision_tree"],"Decision Tree (Grid Search)")
+```
+
+Ahora, un modelo `GLM Poisson` modela el logaritmo de la media y explicitamente asume que la varianza es igual a la media, usa un esquema de pesos ponderados. Esto en teoría debería resolver el problema de **heteroscedasticidad**. Para prestarle atención a la estacionalidad temporal, hicimos lo siguiente con el dataframe en la etapa de limpieza:
+
+```{python}
+import numpy as np
+def make_sin_cos(self):
+        self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['hour_cos'] = np.cos(2 * np.pi * self.dataframe['Hour'] / 24)
+        self.dataframe['dow_sin'] = np.sin(2 * np.pi * self.dataframe['Day'] / 7)
+        self.dataframe['dow_cos'] = np.cos(2 * np.pi * self.dataframe['Day'] / 7)
+
+        self.dataframe['month_sin'] = np.sin(2 * np.pi * self.dataframe['Month'] / 12)
+        self.dataframe['month_cos'] = np.cos(2 * np.pi * self.dataframe['Month'] / 12)
+```
+
+Esta función nos ayuda a incluir esta información de estacionalidad temporal, puesto que la hora 23 estaría "cerca" de la hora 0. Esto ayudará a que `GLM Poisson` tome en cuenta los "picos" de demanda de las 8:00AM y 6:00PM que notamos en el EDA. De no incluir lo de arriba, el modelo buscaría una tendencia monotona , lo cual no brinda mucha información ni es representativo de lo que pasa en la vida real.
+
+```{python}
+y_pred,poisson = comparacion.poisson_GLM()
+comparacion.create_entry(y_pred,"GLM Poisson",comparacion.grid_search_comparison_table)
+comparacion.plot_results(y_pred,"GLM Poisson")
+```
+
+```{python}
+comparacion.grid_search_comparison_table
+```
+
+Parece no haber vencido al Gradient Boost o a Random Forest. Intentaremos usar statsmodel para ver si cambia algo:
+
+```{python}
+import statsmodels.api as sm
+new_X_train = comparacion.X_train.astype(float)
+new_X_test = comparacion.X_test.astype(float)
+# Add constant and fit
+X_train_const = sm.add_constant(new_X_train)
+poisson_sm = sm.GLM(comparacion.y_train, X_train_const, family=sm.families.Poisson()).fit()
+
+# Check predictions on test
+X_test_const = sm.add_constant(new_X_test)
+y_pred_sm = poisson_sm.predict(X_test_const)
+comparacion.plot_results(y_pred_sm,"GLM Poisson (stats.model)")
+comparacion.create_entry(y_pred_sm,"GLM Poisson (stats.model) ",comparacion.grid_search_comparison_table)
+
+```
+
+Parece no ayudar mucho. Ahora intentaremos una Binomial Negativa.
+
+```{python}
+from statsmodels.discrete.discrete_model import NegativeBinomial
+new_X_train = comparacion.X_train.astype(float)
+new_X_test = comparacion.X_test.astype(float)
+nb_model = NegativeBinomial(comparacion.y_train, X_train_const).fit()
+y_pred_nb = nb_model.predict(X_test_const)
+comparacion.plot_results(y_pred_nb,"Negative Binomial GLM Poisson ")
+comparacion.create_entry(y_pred_nb,"Negative Binomial GLM",comparacion.grid_search_comparison_table)
+```
+
+```{python}
+comparacion.grid_search_comparison_table
+```
+
+De los mejores modelos, vamos a comparar `MAE` vs `MSE`, empecemos con `GradientBoost` ya que admite un parametro `loss` para especificar `MAE` o `MSE`. 
+
+```{python}
+import pandas as pd
+tabla_comparativa_gradientboost = pd.DataFrame(columns=comparacion.columns_table)
+y_pred,gradient_boosting = comparacion.gradient_boosting(
+                                                    best_params["gradient_boost"].best_params_["learning_rate"],
+                                                    best_params["gradient_boost"].best_params_["max_depth"],
+                                                    best_params["gradient_boost"].best_params_["n_estimators"],
+                                                    loss="squared_error")
+tabla_comparativa_gradientboost=comparacion.create_entry(y_pred,"Gradient Boosting (MSE)",tabla_comparativa_gradientboost)
+comparacion.plot_results(y_pred,"Gradient Boosting (MSE)")
+tabla_comparativa_gradientboost
+```
+
+```{python}
+import pandas as pd
+y_pred,gradient_boosting = comparacion.gradient_boosting(
+                                                    best_params["gradient_boost"].best_params_["learning_rate"],
+                                                    best_params["gradient_boost"].best_params_["max_depth"],
+                                                    best_params["gradient_boost"].best_params_["n_estimators"],
+                                                    loss="absolute_error")
+tabla_comparativa_gradientboost=comparacion.create_entry(y_pred,"Gradient Boosting (MAE)",tabla_comparativa_gradientboost)
+comparacion.plot_results(y_pred,"Gradient Boosting (MAE)")
+```
+
+```{python}
+tabla_comparativa_gradientboost
+```
+
+Tenemos que para `GradientBoost` MSE es mejor.
+
+Ahora intentemos con el otro modelo que resultó ser muy bueno, `XGBoost`: 
+
+```{python}
+tabla_comparativa_xgboost = pd.DataFrame(columns=comparacion.columns_table)
+y_pred,xgboost = comparacion.xg_boost(
+                                                    best_params["xg_boost"].best_params_["learning_rate"],
+                                                    best_params["xg_boost"].best_params_["max_depth"],
+                                                    best_params["xg_boost"].best_params_["n_estimators"],
+                                                    objective="reg:squarederror")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MSE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred,"XGBoost(MSE)")
+tabla_comparativa_xgboost
+```
+
+```{python}
+y_pred,xgboost = comparacion.xg_boost(
+                                                    best_params["xg_boost"].best_params_["learning_rate"],
+                                                    best_params["xg_boost"].best_params_["max_depth"],
+                                                    best_params["xg_boost"].best_params_["n_estimators"],
+                                                    objective="reg:absoluteerror")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MSE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred,"XGBoost(MSE)")
+tabla_comparativa_xgboost
+```
+
+En ambos casos, correrlos con `MSE` resultó ser mejor. 
+
+## Comparación de coeficientes
+Vamos a comparar los coeficientes
+
+```{python}
+import matplotlib.pyplot as plt
+
+coefs = lasso.coef_
+features = comparacion.X.columns
+plt.figure(figsize=(10,5))
+plt.bar(features, coefs)
+plt.xticks(rotation=90)
+plt.title(f'Coeficientes – Lasso')
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+
+coefs = ridge.coef_
+features = comparacion.X.columns
+plt.figure(figsize=(10,5))
+plt.bar(features, coefs)
+plt.xticks(rotation=90)
+plt.title(f'Coeficientes – Ridge')
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+
+coefs = poisson.named_steps["poissonregressor"].coef_
+features = comparacion.X.columns
+plt.figure(figsize=(10,5))
+plt.bar(features, coefs)
+plt.xticks(rotation=90)
+plt.title(f'Coeficientes – Poisson')
+plt.tight_layout()
+plt.show()
+```
+
+Podemos ver como `Lasso` manda a 0 a los features menos importantes. `Ridge` los acerca a 0. `Poisson` deja `Functioning Day` muy alto esto se debe a que esta variable binaria marca una diferencia drástica en la demanda: los días no hábiles presentan un alquiler casi nulo, frente a los días hábiles donde la demanda se dispara. Al estandarizar, el coeficiente representa el cambio en log-demanda por cada aumento de una desviación estándar (~0.4 unidades de la escala original), lo que sobrestima la magnitud aparente del efecto
+
+## Conclusion:
+Sorprendentemente, a pesar de haber un uso de justificado de una `GLM de Poisson`, esta no parece vencer a `Gradient Boost` , `Random Forest`, o a `XGBoost` pero sí vence a `Lasso`, `Ridge` y `Elastic Net`. Esto a pesar de haber incluido modificaciones para tomar en cuenta la estacionalidad temporal. 
+
+
+A pesar de que una GLM de Poisson es teoricamente la más apropiada para datos de conteo, la presencia de no linealidad, interacciones entre variables, etc la hacen inferior a modelos basados en árboles o a los de redes en el perfomance de predicción. Esto se alinea con lo mencionado en clase y en otros estudios, que muestran que la flexibilidad de estos metodos ofrecen un mejor perfomance comparado con modelos parametricos a la hora de trabajar con data que tiene temporalidad estacional.
+
+`GradientBoost` y `XGBoost` resultaron ser los mejores debido a la estructura compleja del dataset, que un modelo lineal no podría capturar. Estos modelos de boosting son especialmente buenos modelando relaciones no lineales y estacionalidad, estos modelos aprenden automáticamente las no linealidades como lo son las horas picos, el clima, etc. 
+
+En resumen, `GradientBoost` y `XGBoost`  son los mejores porque aprenden de forma no paramétrica las no linealidades e interacciones presentes en los datos, y el proceso de boosting les da una gran capacidad predictiva sin caer en sobreajuste gracias a la regularización y al ajuste gradual de los residuos. Su flexibilidad y mecanismo de corrección secuencial son los más adecuados para la naturaleza de la demanda de bicicletas.
+
