@@ -23,7 +23,6 @@ Todo nuestro código se encuentra en el [siguiente repositorio de GitHub](https:
 + [inserte correo Alan Riva Palacio Cohen](correo.com). 
 + [inserte correo Jorge Ignacio Gonzalez Cazares](correo.com)
 
-Puede que sea necesario usar un ambiente de python. Recuerda definir tu ambiente de python al inicio del documento `.qmd`  modificando `params` al inicio de este documento. 
 
 El proyecto está ordenado de la siguiente forma:
 
@@ -730,13 +729,13 @@ Ahora intentemos con el otro modelo que resultó ser muy bueno, `XGBoost`:
 
 ```{python}
 tabla_comparativa_xgboost = pd.DataFrame(columns=comparacion.columns_table)
-y_pred,xgboost = comparacion.xg_boost(
+y_pred_xgboost,xgboost = comparacion.xg_boost(
                                                     best_params["xg_boost"]["learning_rate"],
                                                     best_params["xg_boost"]["max_depth"],
                                                     best_params["xg_boost"]["n_estimators"],
                                                     objective="reg:squarederror")
-tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MSE)",tabla_comparativa_xgboost)
-comparacion.plot_results(y_pred,"XGBoost(MSE)")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred_xgboost,"XGBoost (MSE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred_xgboost,"XGBoost(MSE)")
 tabla_comparativa_xgboost
 ```
 
@@ -746,8 +745,8 @@ y_pred,xgboost = comparacion.xg_boost(
                                                     best_params["xg_boost"]["max_depth"],
                                                     best_params["xg_boost"]["n_estimators"],
                                                     objective="reg:absoluteerror")
-tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MSE)",tabla_comparativa_xgboost)
-comparacion.plot_results(y_pred,"XGBoost(MSE)")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MAE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred,"XGBoost(MAE)")
 tabla_comparativa_xgboost
 ```
 
@@ -764,6 +763,21 @@ self.y = np.sqrt(self.dataframe[self.dependent_variable])
 De esta manera reduje la influencia de los picos extremos de demanda, los cuales vimos en la sección de EDA que ocurrían alrededor de los horarios de entrada y salida de oficinas. Después de la raíz cuadrada los valores se comprimen, por ejemplo si cerca las 8:00AM se rentan más de 2000 bicis pero a las 12:00AM se rentan 500, la raíz cuadrada los manda respectivamente a 44.7 y a 22.4 por lo que la distribución se vuelve más simétrica y normal. 
 
 Lo quise hacer de esta manera para suavizar dichos picos de demanda y no considerarlos outliers puesto que dan mucha información acerca de patrones de uso.
+
+## Interpretación de resultados y conclusión
+
+Al final la tabla quedó así:
+
+```{python}
+comparacion.grid_search_comparison_table.sort_values(by='R2_score', ascending=False)
+```
+
+Con la grafica del mejor modelo así:
+
+```{python}
+comparacion.plot_results(y_pred_xgboost,"XGBoost")
+```
+
 
 
 ## Conclusión
