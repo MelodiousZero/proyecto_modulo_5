@@ -20,8 +20,8 @@ params:
 
 Todo nuestro código se encuentra en el [siguiente repositorio de GitHub](https://github.com/MelodiousZero/proyecto_modulo_5), al cual le hemos dado acceso a los siguiente correos:
 
-+ [inserte correo Alan Riva Palacio Cohen](correo.com). 
-+ [inserte correo Jorge Ignacio Gonzalez Cazares](correo.com)
++ [Alan Riva Palacio Cohen](alan@sigma.iimas.unam.mx). 
++ [Jorge Ignacio Gonzalez Cazares](jorge.gonzalez@sigma.iimas.unam.mx)
 
 
 El proyecto está ordenado de la siguiente forma:
