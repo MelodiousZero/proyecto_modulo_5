@@ -72,3 +72,11 @@ pip install -r requirements.txt
 
 Listo, procura usar este ambiente virtual para ejecutar los `.ipynb` o los `.py`.
 
+## Resultados en línea.
+
+
+En la siguiente URL se encuentran los resultados de este proyecto desplegados usando GitHub Pages: 
+
+https://melodiouszero.github.io/proyecto_modulo_5/
+
+Viene con más detalles y gráficos más grandes a comparación del reporte `.pdf` y de la presentación.

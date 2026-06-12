@@ -304,10 +304,14 @@ Después de haber hecho el EDA procedemos a codificar las variables categóricas
 ```{python}
 
 def replace_holiday(self):
-    self.dataframe['Holiday'] = self.dataframe['Holiday'].apply(lambda x: 1 if x=="Holiday" else 0 )
+    self.dataframe['Holiday'] = self.dataframe['Holiday'].apply(
+        lambda x: 1 if x=="Holiday"
+        else 0 )
     
 def replace_functioning_day(self):
-    self.dataframe['Functioning Day'] = self.dataframe['Functioning Day'].apply(lambda x: 1 if x=="Yes" else 0 )
+    self.dataframe['Functioning Day'] = self.dataframe['Functioning Day'].apply(
+        lambda x: 1 if x=="Yes"
+        else 0)
 
 def encode(self):
     season_map = {'Spring': 0, 'Summer': 1, 'Autumn': 2, 'Winter': 3}

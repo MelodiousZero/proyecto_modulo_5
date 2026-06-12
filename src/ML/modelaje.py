@@ -90,6 +90,16 @@ class compareModels:
         y_pred = elastic_net_regressor.predict(X_test_scaled)
         return y_pred,elastic_net_regressor
     
+    def poisson_GLM(self):
+        poisson_sklearn = make_pipeline(
+            self.scaler, 
+            PoissonRegressor(alpha=0.0, max_iter=1000) 
+        )
+
+        poisson_sklearn.fit(self.X_train, self.y_train)
+        y_pred = poisson_sklearn.predict(self.X_test)
+        return y_pred,poisson_sklearn
+    
     def decision_tree(self,max_depth=9,min_samples_leaf=3,min_samples_split=15):
         decision_tree_regressor = DecisionTreeRegressor(max_depth=max_depth,
                                                         min_samples_leaf=min_samples_leaf,
@@ -120,15 +130,7 @@ class compareModels:
         y_pred = gradient_boosting_regressor.predict(self.X_test)
         return y_pred,gradient_boosting_regressor
     
-    def poisson_GLM(self):
-        poisson_sklearn = make_pipeline(
-            self.scaler, 
-            PoissonRegressor(alpha=0.0, max_iter=1000) 
-        )
-
-        poisson_sklearn.fit(self.X_train, self.y_train)
-        y_pred = poisson_sklearn.predict(self.X_test)
-        return y_pred,poisson_sklearn
+    
 
     def ada_boost(self, learning_rate=1.0, n_estimators=50, loss='linear'):
         ada_boost_regressor = AdaBoostRegressor(

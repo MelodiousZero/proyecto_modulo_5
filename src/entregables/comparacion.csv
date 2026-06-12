@@ -1,0 +1,11 @@
+Model,Adjusted_R2,Adjusted_R2(GridSearchCV)
+Random Forest,0.9207,0.9217
+Gradient Boost,0.9113,0.9373
+MLP,0.8961,0.9279
+XGBoost,0.8745,0.938
+Decision Tree,0.8502,0.8702
+GLM Poisson,0.6576,0.6576
+Linear Regression,0.6288,0.6288
+Lasso,0.6286,0.6287
+Ridge,0.6288,0.6287
+Elastic Net,0.6288,0.6287
