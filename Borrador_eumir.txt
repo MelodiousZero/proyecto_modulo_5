@@ -1,0 +1,70 @@
+# %% [markdown]
+# ## Importando el dataset.
+# 
+# Vamos a importar el dataset de 'Seoul Bike Sharing Demand' del repositorio de Machine Learning de UC Irvine, que [podemos encontrar aquí](https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand). 
+
+# %%
+from ucimlrepo import fetch_ucirepo 
+import pandas as pd
+  
+# fetch dataset 
+seoul_bike_sharing_demand = fetch_ucirepo(id=560) 
+  
+# data (as pandas dataframes) 
+X = seoul_bike_sharing_demand.data.features 
+y = seoul_bike_sharing_demand.data.targets 
+  
+# metadata 
+print(seoul_bike_sharing_demand.metadata) 
+  
+# variable information 
+print(seoul_bike_sharing_demand.variables) 
+
+
+# %%
+# CONOCER EL TARGET 
+
+# Nuestro objetivo es predecir el numero de bicicletas usadas a partir de la informacion de los features
+# Sin embargo tendremos una columna que nos indica cuando tenemos dias donde el sistema de renta esta inhabilitado 
+# Estos datos agregan un sesgo desde el origen de la informacion a nuestra prediccion ya que no podemos asegurar si la causa de esto proviene de las features o por causas externas
+# Conservar estos datos entrenaria nuestros modelos erroneamente, ya que de haber sido un dia con servicio no podemos afirmar que el numero de bicicletas hubiera sido 0, asumirlo implica un riesgo mayor a nuestras predicciones que omitir esta información 
+
+# LIMPIEZA DE DATOS
+
+# Una vez conocido el target de este proyecto veremos que la variable target predeterminada es la incorrecta
+# Comenzaremos uniendo en un dataset la informacion
+
+data = X.copy()
+data['Functional Day'] = y  
+
+# Lo siguiente es eliminar los registros de dias sin servicio
+data = data[data['Functional Day'] == "Yes"]
+
+# Una vez conseguido esto podemos eliminar la columna con esta informacion
+data = data.drop(columns=['Functional Day'])
+
+data = data.reset_index()
+
+data = data.drop(columns=['index'])
+
+data
+
+# %%
+# DUMMY VARIABLES
+
+# Vale la pena realizar un analisis de las features presentadas para detectar si tenemos variables cateogircas
+#!pip install sweetviz
+import sweetviz as sv
+
+report = sv.analyze(data)
+report.show_html("reporte.html")
+
+# Veremos que de nuestras features dos variables son categoricas
+# Seasons tiene las variables Spring, Summer, Autumn, Winter
+# Holiday tiene "Holiday" y "No Holiday" 
+
+# %%
+data_dummied = pd.get_dummies(data, columns=['Seasons'], drop_first=True)
+data_dummied = pd.get_dummies(data_dummied, columns=['Holiday'], drop_first=True)
+
+data_dummied.head()
