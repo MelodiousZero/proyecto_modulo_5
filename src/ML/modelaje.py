@@ -37,7 +37,7 @@ class compareModels:
         self.indepent_variables = list(set(self.dataframe.columns.tolist())-{self.dependent_variable})
         self.y = np.sqrt(self.dataframe[self.dependent_variable])
         self.X = self.dataframe.drop("Rented Bike Count",axis=1)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size = 0.2, random_state = 0)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size = 0.2, random_state = 0) #antes de usar self.scaler para evitar data leakage
         self.columns_table = ['Model', 'MAE', 'MSE', 'RMSE', 'R2_score', 'Adjusted_R2']
         self.comparison_table = pd.DataFrame(columns=self.columns_table)
         self.alphas = np.logspace(-4,2,50)
