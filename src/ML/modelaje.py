@@ -284,7 +284,7 @@ class compareModels:
         if not best_params:
             og_params = self.grid_searching()
             best_params = {
-            name: gs
+            name: gs.best_params_
             for name, gs in og_params.items()
         }
         else:
