@@ -60,9 +60,9 @@ python3.13 -m venv .nombre_de_tu_ambiente_virtual_aqui
 
 | Plataforma  | Comando                     |
 |-----------|-----------------------------|
-| macOS / Linux | `source .venv/bin/activate`   |
-| Windows (cmd) | `.venv\Scripts\activate.bat` |
-| Windows (PowerShell) | `.venv\Scripts\Activate.ps1` |
+| macOS / Linux | `source .nombre_de_tu_ambiente_virtual_aqui/bin/activate`   |
+| Windows (cmd) | `.nombre_de_tu_ambiente_virtual_aqui\Scripts\activate.bat` |
+| Windows (PowerShell) | `.nombre_de_tu_ambiente_virtual_aqui\Scripts\Activate.ps1` |
 
 ### 3. Instala las depedencias
 
