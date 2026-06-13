@@ -52,7 +52,7 @@ Todas las dependencias están en `requirements.txt`.
 ### 1. Crea un ambiente virtual
 
 ```bash
-python3.13 -m venv .nombre_de_tu_ambiente_virtual_aqui
+python3.13 -m venv .ambiente_virtual
 ```
 
 
@@ -60,9 +60,9 @@ python3.13 -m venv .nombre_de_tu_ambiente_virtual_aqui
 
 | Plataforma  | Comando                     |
 |-----------|-----------------------------|
-| macOS / Linux | `source .nombre_de_tu_ambiente_virtual_aqui/bin/activate`   |
-| Windows (cmd) | `.nombre_de_tu_ambiente_virtual_aqui\Scripts\activate.bat` |
-| Windows (PowerShell) | `.nombre_de_tu_ambiente_virtual_aqui\Scripts\Activate.ps1` |
+| macOS / Linux | `source .ambiente_virtual/bin/activate`   |
+| Windows (cmd) | `.ambiente_virtual\Scripts\activate.bat` |
+| Windows (PowerShell) | `.ambiente_virtual\Scripts\Activate.ps1` |
 
 ### 3. Instala las depedencias
 
