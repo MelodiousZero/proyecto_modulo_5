@@ -51,10 +51,10 @@ Todas las dependencias están en `requirements.txt`.
 
 ### 1. Crea un ambiente virtual
 
-```bash
-python3.13 -m venv .ambiente_virtual
-```
-
+| Plataforma  | Comando                     |
+|-----------|-----------------------------|
+| macOS / Linux | ⁠ python3.13 -m venv .ambiente_virtual ⁠   |
+| Windows | ⁠ py -3.13 -m venv .ambiente_virtual ⁠ |
 
 ### 2. Activa tu ambiente virtual
 
