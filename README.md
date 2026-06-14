@@ -64,7 +64,7 @@ python3.13 -m venv .ambiente_virtual
 | Windows (cmd) | `.ambiente_virtual\Scripts\activate.bat` |
 | Windows (PowerShell) | `.ambiente_virtual\Scripts\Activate.ps1` |
 
-### 3. Instala las depedencias
+### 3. Instala las dependencias
 
 ```bash
 pip install -r requirements.txt
