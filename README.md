@@ -53,8 +53,8 @@ Todas las dependencias están en `requirements.txt`.
 
 | Plataforma  | Comando                     |
 |-----------|-----------------------------|
-| macOS / Linux | ⁠ python3.13 -m venv .ambiente_virtual ⁠   |
-| Windows | ⁠ py -3.13 -m venv .ambiente_virtual ⁠ |
+| macOS / Linux | ⁠`python3.13 -m venv .ambiente_virtual` ⁠   |
+| Windows | ⁠ `py -3.13 -m venv .ambiente_virtual`⁠ |
 
 ### 2. Activa tu ambiente virtual
 
