@@ -32,10 +32,11 @@ class cleanDataFrame:
         return seoul_bike_sharing_demand
             
     def make_date(self):
-        self.dataframe['Date'] = pd.to_datetime(self.dataframe['Date'],format="mixed")
+        self.dataframe['Date'] = pd.to_datetime(self.dataframe['Date'], format="%Y-%m-%d")
         self.dataframe['Month'] = self.dataframe["Date"].dt.month_name()
         self.dataframe['Day'] = self.dataframe["Date"].dt.strftime("%A")
-        self.dataframe.drop("Date",inplace=True,axis=1)
+        self.dataframe.drop("Date", inplace=True, axis=1)
+
         
     def make_sin_cos(self):
         self.dataframe['hour_sin'] = np.sin(2 * np.pi * self.dataframe['Hour'] / 24)
