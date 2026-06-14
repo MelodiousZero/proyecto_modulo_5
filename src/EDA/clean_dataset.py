@@ -32,7 +32,7 @@ class cleanDataFrame:
         return seoul_bike_sharing_demand
             
     def make_date(self):
-        self.dataframe['Date'] = pd.to_datetime(self.dataframe['Date'], format="%d-%m-%Y")
+        self.dataframe['Date'] = pd.to_datetime(self.dataframe['Date'], format="%d/%m/%Y")
         self.dataframe['Month'] = self.dataframe["Date"].dt.month_name()
         self.dataframe['Day'] = self.dataframe["Date"].dt.strftime("%A")
         self.dataframe.drop("Date", inplace=True, axis=1)
