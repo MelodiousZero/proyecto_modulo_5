@@ -1,0 +1,24 @@
+1
+#columnas_ols=["hora_sin", "hora_cos", "Month_sin", "Mont_cos", "es_Weeknd", "es_nevado", "es_lluvioso", "Temperature(°C)_scaler", "Humidity(%)_scaler", "Wind speed (m/s)_scaler", "Visibility (10m)_scaler", "Dew point temperature(°C)_scaler", "Solar Radiation (MJ/m2)_scaler", "Seasons_Spring", "Seasons_Summer", "Seasons_Winter", "Holiday_No Holiday", "Functioning Day_Yes"]    
+columnas_ols=["hora_sin", "hora_cos", "Month_sin", "Mont_cos", "es_Weeknd", "es_nevado", "es_lluvioso", "Temperature(°C)_scaler", "Humidity(%)_scaler", "Wind speed (m/s)_scaler", "Visibility (10m)_scaler", "Solar Radiation (MJ/m2)_scaler", "Holiday_No Holiday", "Functioning Day_Yes"]    
+x_dummies=df_datos_2[columnas_ols]
+y=df_datos_2['Rented Bike Count']
+fechas=df_datos_2['Date']
+          
+x_dummies=df_datos_2[columnas_ols]
+y=df_datos_2['Rented Bike Count']
+fechas=df_datos_2['Date']
+
+1.- Código repetido
+
+2
+Ahora comparrando contra el Modelo OLS podemos observar que este reduce la varianza de los valores ajustados, lo cual mejora mucho mas sin embargo los valores de devianza y el coeficiente de pearson empeoran, lo que puede ser explicado por la sobredispersion ie el supuesto de $E\[Y\]=Var[Y]$ 
+
+2.- Esta mal puesta la formula, no lee el formato.
+
+3
+datos=pd.read_csv("SeoulBikeData.csv",encoding="cp1252")
+df_datos=pd.DataFrame(datos)
+df_datos
+
+3.- Sugerencia: Sí se tiene problema con el encoding cambiar a "UTF-8"
