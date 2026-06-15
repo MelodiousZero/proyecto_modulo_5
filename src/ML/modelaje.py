@@ -57,7 +57,7 @@ class compareModels:
          
 
     def lasso(self,alpha=0.01):
-        lasso_regressor = Lasso(alpha=alpha)
+        lasso_regressor = Lasso(alpha=alpha,random_state=self.seed)
         X_train_scaled = self.scaler.fit_transform(self.X_train)
         X_test_scaled = self.scaler.transform(self.X_test)
 
@@ -68,7 +68,7 @@ class compareModels:
         return y_pred,lasso_regressor
 
     def ridge(self,alpha=0.01):
-        ridge_regressor = Ridge(alpha=alpha)
+        ridge_regressor = Ridge(alpha=alpha,random_state=self.seed)
         X_train_scaled = self.scaler.fit_transform(self.X_train)
         X_test_scaled = self.scaler.transform(self.X_test)
 
@@ -80,7 +80,7 @@ class compareModels:
 
     
     def elastic_net(self,alpha=0.001,l1_ratio=0.3):
-        elastic_net_regressor = ElasticNet(alpha = alpha,l1_ratio = l1_ratio)
+        elastic_net_regressor = ElasticNet(alpha = alpha,l1_ratio = l1_ratio,random_state=self.seed)
         X_train_scaled = self.scaler.fit_transform(self.X_train)
         X_test_scaled = self.scaler.transform(self.X_test)
 
@@ -103,7 +103,8 @@ class compareModels:
     def decision_tree(self,max_depth=9,min_samples_leaf=3,min_samples_split=15):
         decision_tree_regressor = DecisionTreeRegressor(max_depth=max_depth,
                                                         min_samples_leaf=min_samples_leaf,
-                                                        min_samples_split=min_samples_split)
+                                                        min_samples_split=min_samples_split,
+                                                        random_state=self.seed)
         decision_tree_regressor.fit(self.X_train,self.y_train)
         y_pred_train = decision_tree_regressor.predict(self.X_train)
         y_pred = decision_tree_regressor.predict(self.X_test)
@@ -112,7 +113,8 @@ class compareModels:
     def random_forest(self,max_depth=None,min_samples_split=3,n_estimators=150):
         random_forest_regressor = RandomForestRegressor(max_depth=max_depth,
                                                         min_samples_split=min_samples_split,
-                                                        n_estimators=n_estimators)
+                                                        n_estimators=n_estimators,
+                                                        random_state=self.seed)
         random_forest_regressor.fit(self.X_train,self.y_train)
         y_pred_train = random_forest_regressor.predict(self.X_train)
         y_pred = random_forest_regressor.predict(self.X_test)
@@ -124,7 +126,8 @@ class compareModels:
         gradient_boosting_regressor = GradientBoostingRegressor(learning_rate=learning_rate,
                                                                 max_depth=max_depth,
                                                                 n_estimators=n_estimators,
-                                                                loss=loss)
+                                                                loss=loss,
+                                                                random_state=self.seed)
         gradient_boosting_regressor.fit(self.X_train,self.y_train)
         y_pred_train = gradient_boosting_regressor.predict(self.X_train)
         y_pred = gradient_boosting_regressor.predict(self.X_test)
@@ -188,12 +191,12 @@ class compareModels:
 
         #lasso
         lasso_param_grid = {"alpha":self.alphas}
-        lasso = Lasso(max_iter=10000)
+        lasso = Lasso(max_iter=10000,random_state=self.seed)
         lasso_grid = GridSearchCV(lasso,lasso_param_grid,cv=5,scoring="r2")
         lasso_grid.fit(X_train_scaled, self.y_train)
         #ridge
         ridge_param_grid = {"alpha":self.alphas}
-        ridge = Ridge(max_iter=10000)
+        ridge = Ridge(max_iter=10000,random_state=self.seed)
         ridge_grid = GridSearchCV(ridge,ridge_param_grid,cv=5,scoring="r2")
         ridge_grid.fit(X_train_scaled, self.y_train)
         #elastic net
@@ -201,7 +204,7 @@ class compareModels:
             "alpha": self.alphas,
             "l1_ratio": self.l1_ratios
         }
-        elastic_net = ElasticNet(max_iter=10000)
+        elastic_net = ElasticNet(max_iter=10000,random_state=self.seed)
         elastic_net_grid = GridSearchCV(elastic_net,elastic_net_paragram_grid,cv=5,scoring="r2")
         elastic_net_grid.fit(X_train_scaled, self.y_train)
         #decision tree
