@@ -8,13 +8,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV 
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import ElasticNet
 from sklearn.linear_model import PoissonRegressor
 from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error
