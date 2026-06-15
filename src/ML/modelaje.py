@@ -368,13 +368,13 @@ class compareModels:
         
     def most_important_features(self):
         important_variables = self.X.columns
-        gradient_boosting = GradientBoostingRegressor(learning_rate=0.1, max_depth=7, n_estimators=300)
-        gradient_boosting.fit(self.X_train, self.y_train)
-        importances = gradient_boosting.feature_importances_
+        xg_boosting = XGBRegressor(learning_rate=0.1, max_depth=7, n_estimators=300,subsample=0.8)
+        xg_boosting.fit(self.X_train, self.y_train)
+        importances = xg_boosting.feature_importances_
         indices = np.argsort(importances)
 
         plt.figure(figsize=(12,6))
-        plt.title('Feature Importances (Gradient Boosting - GridSearchCV)', fontsize=14)
+        plt.title('Feature Importances (XGBoost - GridSearchCV)', fontsize=14)
 
         bar_colors = ['#CD2E3A' if i % 2 == 0 else '#0047A0' for i in range(len(indices))]
 
