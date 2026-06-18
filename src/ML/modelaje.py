@@ -231,7 +231,7 @@ class compareModels:
         }
         gradient_boosting = GradientBoostingRegressor(random_state=self.seed)
         gradient_boosting_grid = GridSearchCV(gradient_boosting,gradient_boosting_param_grid,cv=5,scoring="r2")
-        gradient_boosting_grid.fit(self.X_train,self.y_train)
+        gradient_boosting_grid.fit(X_train_scaled,self.y_train)
 
         #AdaBoost
         ada_param_grid = {
