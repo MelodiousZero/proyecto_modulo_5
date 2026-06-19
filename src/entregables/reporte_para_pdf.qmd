@@ -233,7 +233,7 @@ plt.show()
 
 Con base en lo anterior, las observaciones son:
 
-+ La renta de bicicletas aumenta en primavera y verano (debido a que son condiciones más agradables para rodar)
++ La renta de bicicletas aumenta en verano y otoño (debido a que son condiciones más agradables para rodar)
 + Se rentan más bicicletas en días que no son festivos (la gente las usa para ir a trabajar, probablemente)
 + Se rentan más o menos en una misma cantidad entre fin de semana o entre semana.
 + La gráfica de los meses nos muestra la tendencia de las temporadas. 
@@ -258,8 +258,8 @@ Observaciones de la gráfica de arriba serían:
 
 + En días no festivos los picos se encuentran en las horas de entrada y salida de las oficinas.
 + En días festivos no hay tales picos es una gráfica más suave que va disminuyendo conforme acaba el día.
-  
-Esta gráfica muestra una clara tendencia de uso para transportarse hacia desde los espacios de trabajo.
+
+Nótese que las líneas de variabilidad son mucho más grandes en días festivos mientras que en no festivos son mucho más cortas, lo que puede respaldar que el servicio es usado de manera regular por trabajadores para trasladarse hacia o desde la oficina
 
 ```{python}
 #| echo: false
@@ -283,8 +283,9 @@ plt.show()
 
 Observaciones:
 
-+ Los picos permacen pero en invierno la gente renta menos bicicletas (debido a que son condiciones más adversas para rodar)
++ Los picos del horario de oficina permanecen independientes de la estación, no obstante, en invierno la gente renta menos bicicletas debido a que son condiciones más adversas para rodar al presentar nevadas o ventiscas durante la estación.
 + En verano y otoño se rentan más.
+
 
 ```{python}
 
@@ -828,7 +829,7 @@ tabla_comparativa_xgboost
 
 En ambos casos, correrlos con `MSE` resultó ser mejor. 
 
-La razón por la cual `MSE` resultó ser mejor es por como procesé previamente la variable dependiente (`Rented Bike Count`) recordemos que hice lo siguiente:
+La razón por la cual `MSE` resultó ser mejor es por como procesamos previamente la variable dependiente (`Rented Bike Count`) recordemos que hice lo siguiente:
 
 ```{python}
 #| eval: false
@@ -836,9 +837,9 @@ La razón por la cual `MSE` resultó ser mejor es por como procesé previamente 
 self.y = np.sqrt(self.dataframe[self.dependent_variable])
 ```
 
-De esta manera reduje la influencia de los picos extremos de demanda, los cuales vimos en la sección de EDA que ocurrían alrededor de los horarios de entrada y salida de oficinas. Después de la raíz cuadrada los valores se comprimen, por ejemplo si cerca las 8:00AM se rentan más de 2000 bicis pero a las 12:00AM se rentan 500, la raíz cuadrada los manda respectivamente a 44.7 y a 22.4 por lo que la distribución se vuelve más simétrica y normal. 
+De esta manera redujimos la influencia de los picos extremos de demanda, los cuales vimos en la sección de EDA que ocurrían alrededor de los horarios de entrada y salida de oficinas. Después de la raíz cuadrada los valores se comprimen, por ejemplo si cerca las 8:00AM se rentan más de 2000 bicis pero a las 12:00AM se rentan 500, la raíz cuadrada los manda respectivamente a 44.7 y a 22.4 por lo que la distribución se vuelve más simétrica y normal. 
 
-Lo quise hacer de esta manera para suavizar dichos picos de demanda y no considerarlos outliers puesto que dan mucha información acerca de patrones de uso.
+Lo quisimos hacer de esta manera para suavizar dichos picos de demanda y no considerarlos outliers puesto que dan mucha información acerca de patrones de uso.
 
 
 ## Interpretación de resultados y conclusión
