@@ -1,0 +1,40 @@
+1
+y_pred,ridge = comparacion.ridge()
+comparacion.create_entry(y_pred,"Ridge",comparacion.comparison_table)
+
+comparacion.plot_results(y_pred,"Ridge")
+
+1.- Cambiar el otden del plot y el entry para que se muestre en df
+
+2
+# import json
+# best_params_clean = {name: gs_ for name, gs in best_params.items()}
+# with open('best_params.json', 'w') as f:
+#     json.dump(best_params_clean, f, indent=2)
+
+2.- No debe tener "_" después del gs
+
+3
+comparacion.most_important_features()
+
+3.- Porque la función corre con el gradient boost si el mejor modelo fue el XGBOOST
+
+4
+y_pred,xgboost = comparacion.xg_boost(
+                                                    best_params["xg_boost"]["learning_rate"],
+                                                    best_params["xg_boost"]["max_depth"],
+                                                    best_params["xg_boost"]["n_estimators"],
+                                                    objective="reg:absoluteerror")
+tabla_comparativa_xgboost=comparacion.create_entry(y_pred,"XGBoost (MSE)",tabla_comparativa_xgboost)
+comparacion.plot_results(y_pred,"XGBoost(MSE)")
+tabla_comparativa_xgboost
+
+4.- Es MAE no MSE
+
+5
+import json
+
+with open('best_params.json', 'r') as f:
+    best_params_dict = json.load(f)
+
+5.- Los datos cargados con el .json y los obtenidos corriendo comparacion.re_run_with_better_params() no dan lo mismo

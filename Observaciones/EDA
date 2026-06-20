@@ -1,0 +1,187 @@
+1
+Con base en lo anterior, las observaciones son:
+- La renta de bicicletas aumenta en primavera y verano (debido a que son condiciones más agradables para rodar)
+- Se rentan más bicicletas en días que no son festivos (la gente las usa para ir a trabajar, probablemente). 
+- Se rentan más o menos en una misma cantidad entre fin de semana o entre semana. 
+- La gráfica de los meses nos muestra la tendencia de las temporadas. 
+- El día con menos rentas es domingo (probablemente porque la gente descansa ese día)
+
+1.- Según la gráfica se tiene con la actualziación el .py, las estaciones con mayores renta son verano y otoño.
+
+
+2
+Observaciones de la gráfica de arriba serían:
+- En días no festivos los picos se encuentran en las horas de entrada y salida de las oficinas.
+- En días festivos no hay tales picos es una gráfica más suave que va disminuyendo conforme acaba el día.
+Esta gráfica muestra una clara tendencia de uso para transportarse hacia desde los espacios de trabajo.
+
+2.- Se tiene que agregar el doble tabulados al final de día para que se vea el salto de linea en la libreta de jupyter
+2.- Cambiar la conclusión: "Nótese que las líneas de variabilidad son mucho más grandes en días festivos mientras que en no festivos son mucho más cortas, lo que puede respaldar que el servicio es usado de manera regular por trabajadores para trasladarse hacia o desde la oficina."
+
+
+3
+Observaciones:
+- Los picos permacen pero en invierno la gente renta menos bicicletas (debido a que son condiciones más adversas para rodar)
+- En verano y otoño se rentan más.
+
+3.- Sugerencia de cambio del primer punto: Los picos del horario de oficina permacen independiente de la estación, no obstante, en invierno la gente renta menos bicicletas debido a que son condiciones más adversas para rodar al presentar nevadas o ventiscas durante la estación.
+
+
+4
+Todas estas modificaciones de arriba más la descarga del dataset las reunimos en la siguiente función para poder ser llamada en otros archivos.
+
+4.- Esta justiifcación tendría que estar desde el primer momento en que se hace uso del .py
+
+
+5
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Suponiendo que tu DataFrame se llama df y tiene las columnas 'Hour', 'hour_sin', 'hour_cos'
+plt.figure(figsize=(7, 7))
+sc = plt.scatter(seoul_bike_sharing_demand_df['hour_cos'], seoul_bike_sharing_demand_df['hour_sin'],
+                 c=seoul_bike_sharing_demand_df['Hour'], cmap='twilight',  # Mapa cíclico de color
+                 edgecolors='grey', linewidth=0.3, alpha=0.8)
+
+cbar = plt.colorbar(sc, ticks=range(0, 24, 3))
+cbar.set_label('Hora del día (0-23)')
+
+# Líneas de referencia
+plt.axhline(0, color='black', lw=0.5)
+plt.axvline(0, color='black', lw=0.5)
+
+plt.xlabel('hour_cos (= cos(2π·hora/24))')
+plt.ylabel('hour_sin (= sin(2π·hora/24))')
+plt.title('Representación cíclica de la hora (sin/cos)')
+plt.gca().set_aspect('equal')  # Para que el círculo se vea como círculo
+plt.tight_layout()
+plt.show()
+
+5.- Borrar el comentario ya que esta haciendo una suposición innecesaria al nosotros establecer el proyecto.
+
+
+6
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Suponiendo que tu DataFrame se llama df y tiene las columnas 'Hour', 'hour_sin', 'hour_cos'
+plt.figure(figsize=(7, 7))
+sc = plt.scatter(seoul_bike_sharing_demand_df['hour_cos'], seoul_bike_sharing_demand_df['hour_sin'],
+                 c=seoul_bike_sharing_demand_df['Hour'], cmap='twilight',  # Mapa cíclico de color
+                 edgecolors='grey', linewidth=0.3, alpha=0.8)
+
+cbar = plt.colorbar(sc, ticks=range(0, 24, 3))
+cbar.set_label('Hora del día (0-23)')
+
+# Líneas de referencia
+plt.axhline(0, color='black', lw=0.5)
+plt.axvline(0, color='black', lw=0.5)
+
+plt.xlabel('hour_cos (= cos(2π·hora/24))')
+plt.ylabel('hour_sin (= sin(2π·hora/24))')
+plt.title('Representación cíclica de la hora (sin/cos)')
+plt.gca().set_aspect('equal')  # Para que el círculo se vea como círculo
+plt.tight_layout()
+plt.show()
+
+---------------------------------------------------------------------------------------------------------------
+
+import seaborn as sns
+
+# Convertir a formato largo
+df_long = seoul_bike_sharing_demand_df.melt(id_vars='Hour', value_vars=['hour_sin', 'hour_cos'],
+                  var_name='función', value_name='valor')
+
+sns.set_theme(style='whitegrid')
+plt.figure(figsize=(10, 5))
+sns.lineplot(data=df_long, x='Hour', y='valor', hue='función', marker='o')
+plt.title('Curvas seno y coseno para hora')
+plt.show()
+
+6.- Para qué se hace esta gráfica?, incorporar justificación de la creación de dichas variables
+
+
+7
+df = pd.read_csv("E:/Users/Randy GM/Downloads/resultados.csv")
+
+# Sort by R2_score (optional, to put best at top)
+df = df.sort_values('Adjusted_R2', ascending=True)
+
+# Create a list of different colors (one per bar)
+colors = plt.cm.viridis(np.linspace(0, 1, len(df)))
+
+# Plot horizontal bars
+fig, ax = plt.subplots(figsize=(8, 5))
+bars = ax.barh(df['Model'], df['Adjusted_R2'], color=colors, height=0.6)
+
+# Zoom the x‑axis to highlight the small range (0.63 – 0.665)
+ax.set_xlim(0.6, 0.7)
+
+# Add value labels at the end of each bar
+for bar in bars:
+    width = bar.get_width()
+    ax.text(width + 0.0005, bar.get_y() + bar.get_height()/2,
+            f'{width:.4f}', va='center', ha='left', fontsize=10)
+
+# Labels and title
+ax.set_xlabel('R² Score')
+ax.set_title('R² Score Comparación')
+ax.grid(axis='x', linestyle='--', alpha=0.7)
+
+plt.tight_layout()
+plt.show()
+
+-------------------------------------------------------------------------------------------------
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Leer el CSV
+df = pd.read_csv('E:/Users/Randy GM/Downloads/comparacion.csv')
+
+# Ordenar los modelos por R2_score para que la gráfica quede más clara (opcional)
+df = df.sort_values('Adjusted_R2', ascending=True)
+
+# Configurar posiciones de las barras
+x = np.arange(len(df))          # posiciones base
+width = 0.35                    # ancho de cada barra
+
+# Crear la figura
+fig, ax = plt.subplots(figsize=(12, 6))
+
+# Barras de R2_score (color azul)
+bars1 = ax.bar(x - width/2, df['Adjusted_R2'], width, label='R²',
+               color='#2E86AB', edgecolor='white', linewidth=0.5)
+
+# Barras de Adjusted_R2 (color naranja/rojo)
+bars2 = ax.bar(x + width/2, df['Adjusted_R2(GridSearchCV)'], width, label='R² (GridSearch)',
+               color='#A23B72', edgecolor='white', linewidth=0.5)
+
+# Añadir etiquetas, título y leyenda
+ax.set_xlabel('Modelo', fontsize=12)
+ax.set_ylabel('Valor', fontsize=12)
+ax.set_title('Comparación de R² ajustado y R² Ajustado con gridsearch', fontsize=14, fontweight='bold')
+ax.set_xticks(x)
+ax.set_xticklabels(df['Model'], rotation=45, ha='right', fontsize=10)
+ax.legend(fontsize=11)
+
+# Mostrar el valor encima de cada barra (opcional)
+for bar in bars1 + bars2:
+    height = bar.get_height()
+    ax.annotate(f'{height:.3f}',
+                xy=(bar.get_x() + bar.get_width()/2, height),
+                xytext=(0, 3),  # desplazamiento vertical
+                textcoords="offset points",
+                ha='center', va='bottom', fontsize=7)
+
+# Rejilla ligera para facilitar lectura
+ax.yaxis.grid(True, linestyle='--', alpha=0.3)
+ax.set_axisbelow(True)
+
+plt.tight_layout()
+plt.show()
+# Si deseas guardar la imagen, descomenta:
+# plt.savefig('r2_comparison.png', dpi=300, bbox_inches='tight')
+
+7.- Especificar de donde se obtienen los archivos de comparación/resultado junto con la actualización de ruta y tampoco se cuenta con comentarios conclusivos.
