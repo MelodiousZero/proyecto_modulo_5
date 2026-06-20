@@ -77,7 +77,7 @@ class compareModels:
         return y_pred,ridge_regressor
 
     
-    def elastic_net(self,alpha=0.001,l1_ratio=0.3):
+    def elastic_net(self,alpha=0.01,l1_ratio=0.3):
         elastic_net_regressor = ElasticNet(alpha = alpha,l1_ratio = l1_ratio,random_state=self.seed)
         X_train_scaled = self.scaler.fit_transform(self.X_train)
         X_test_scaled = self.scaler.transform(self.X_test)
